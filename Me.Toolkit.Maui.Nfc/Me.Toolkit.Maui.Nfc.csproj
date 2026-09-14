@@ -15,7 +15,6 @@
       produce a Me.Toolkit.Maui.Nfc.nupkg by accident. Remove this when the session is done.
     -->
     <IsPackable>false</IsPackable>
-    <Version>26.09.09</Version>
     <Product>Me.Toolkit.Maui.Nfc</Product>
     <Description>NFC for .NET MAUI: read and write NDEF messages on a tag.
 Android and iOS are implemented. Mac Catalyst and Windows compile and throw PlatformNotSupportedException, so an app targeting every platform needs no conditional code around the registration.
@@ -35,7 +34,7 @@ Fixed on the way over: PendingIntent.GetActivity with no flags threw on Android 
       libraries need. Microsoft.Maui.Essentials alone is not enough - it has none of them.
       Since .NET 8 the UseMaui* properties no longer add the package reference implicitly (MA002).
     -->
-    <PackageReference Include="Microsoft.Maui.Core" Version="$(MauiVersion)" />
+    <PackageReference Include="Microsoft.Maui.Core" Version="10.0.101" />
   </ItemGroup>
 
   <!--
@@ -60,8 +59,7 @@ Fixed on the way over: PendingIntent.GetActivity with no flags threw on Android 
     <Compile Include="Platforms/iOS/**/*.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'android' AND
-                        $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'ios'">
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'android' AND&#xA;                        $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'ios'">
     <Compile Include="Platforms/Unsupported/**/*.cs" />
   </ItemGroup>
 

@@ -7,7 +7,6 @@
     <AssemblyName>Me.Toolkit.Maui.WebHostPatch</AssemblyName>
     <RootNamespace>Me.Toolkit.Maui.WebHostPatch</RootNamespace>
     <PackageId>Me.Toolkit.Maui.WebHostPatch</PackageId>
-    <Version>26.09.09</Version>
     <Product>Me.Toolkit.Maui.WebHostPatch</Product>
     <Description>Run an ASP.NET Core web host and Kestrel server inside a .NET MAUI app: start it, stop it, and find out what address to show the user.
 ASP.NET Core comes from netstandard2.0 packages, which is what lets it run on Android and iOS: the Microsoft.AspNetCore.App shared framework has no runtime pack for any mobile platform. Despite the name there are no patches left in it.</Description>
@@ -29,7 +28,7 @@ Worth knowing if you are upgrading: Xamarinme.WebHostPatch 1.0.0 pins ASP.NET Co
       libraries need. Microsoft.Maui.Essentials alone is not enough - it has none of them.
       Since .NET 8 the UseMaui* properties no longer add the package reference implicitly (MA002).
     -->
-    <PackageReference Include="Microsoft.Maui.Core" Version="$(MauiVersion)" />
+    <PackageReference Include="Microsoft.Maui.Core" Version="10.0.101" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,8 +43,8 @@ Worth knowing if you are upgrading: Xamarinme.WebHostPatch 1.0.0 pins ASP.NET Co
       version: 2.3.x is the maintained servicing line, and it is advisory-clean, where 2.2.0 carries
       a critical Kestrel advisory (GHSA-5rrx-jjjq-q2r5) and a moderate IIS one.
     -->
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.3.12" />
-    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.3.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.3.13" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.3.13" />
   </ItemGroup>
 
 

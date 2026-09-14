@@ -1,5 +1,5 @@
 using System.Reflection;
-using FluentAssertions;
+using AwesomeAssertions;
 using Me.Toolkit.Maui.Configuration;
 using Microsoft.Extensions.Configuration;
 using Xunit;

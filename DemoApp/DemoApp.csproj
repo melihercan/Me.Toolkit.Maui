@@ -70,8 +70,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.101" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.12" />
 
 		<!-- The house UI and MVVM stack. Only the demo uses these; no library depends on them. -->
 		<PackageReference Include="Syncfusion.Maui.Toolkit" Version="1.0.11" />

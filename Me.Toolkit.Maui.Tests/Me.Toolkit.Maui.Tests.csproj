@@ -32,10 +32,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentAssertions" Version="7.2.2" />
-    <PackageReference Include="xunit.v3" Version="4.0.0" />
+    <!-- AwesomeAssertions, not FluentAssertions: FluentAssertions went commercial at 8.0,
+         free for open source but paid for commercial use. This is the fork of 7.2.2, the
+         last Apache-2.0 release: same API, permissive for good. -->
+    <PackageReference Include="AwesomeAssertions" Version="9.6.0" />
+    <PackageReference Include="xunit.v3" Version="4.0.1" />
     <PackageReference Include="NSubstitute" Version="6.2.0" />
-    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="10.0.0" />
+    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="10.0.12" />
   </ItemGroup>
 
 </Project>

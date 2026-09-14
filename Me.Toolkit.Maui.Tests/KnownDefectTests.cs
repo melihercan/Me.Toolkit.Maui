@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using Me.Toolkit.Maui.Nfc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Hosting;

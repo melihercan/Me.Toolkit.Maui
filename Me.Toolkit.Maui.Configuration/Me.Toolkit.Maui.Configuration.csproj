@@ -7,7 +7,6 @@
     <AssemblyName>Me.Toolkit.Maui.Configuration</AssemblyName>
     <RootNamespace>Me.Toolkit.Maui.Configuration</RootNamespace>
     <PackageId>Me.Toolkit.Maui.Configuration</PackageId>
-    <Version>26.09.09</Version>
     <Product>Me.Toolkit.Maui.Configuration</Product>
     <Description>appsettings.json configuration for .NET MAUI apps, from the app package as a MauiAsset or from an assembly's embedded resources, with the usual appsettings.{environment}.json overlay.
 MAUI references Microsoft.Extensions.Configuration but not the JSON provider, so builder.Configuration has no AddJsonStream. That is what this supplies.</Description>
@@ -27,7 +26,7 @@ The options object is gone, and with it the three ways it could be left half-fil
       libraries need. Microsoft.Maui.Essentials alone is not enough - it has none of them.
       Since .NET 8 the UseMaui* properties no longer add the package reference implicitly (MA002).
     -->
-    <PackageReference Include="Microsoft.Maui.Core" Version="$(MauiVersion)" />
+    <PackageReference Include="Microsoft.Maui.Core" Version="10.0.101" />
 
     <!--
       The one thing this package adds that an app could not already do in a line: MAUI references
@@ -38,7 +37,7 @@ The options object is gone, and with it the three ways it could be left half-fil
       Xamarinme vendored a copy of Microsoft's Newtonsoft-era parser instead, and it drifted. This
       is Microsoft's, maintained.
     -->
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.12" />
   </ItemGroup>
 
 </Project>

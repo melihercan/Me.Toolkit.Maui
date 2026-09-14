@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using Me.Toolkit.Maui.Nfc;
 using Xunit;
 

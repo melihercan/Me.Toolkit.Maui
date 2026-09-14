@@ -7,7 +7,6 @@
     <AssemblyName>Me.Toolkit.Maui.Hosting</AssemblyName>
     <RootNamespace>Me.Toolkit.Maui.Hosting</RootNamespace>
     <PackageId>Me.Toolkit.Maui.Hosting</PackageId>
-    <Version>26.09.09</Version>
     <Product>Me.Toolkit.Maui.Hosting</Product>
     <Description>Sets the host environment name of a .NET MAUI app, so IHostEnvironment.IsDevelopment() means something.
 MAUI registers a host environment of its own, but it always reports Production and its EnvironmentName setter throws. This wraps it.</Description>
@@ -27,7 +26,7 @@ There is no Me.Toolkit.Maui-specific environment interface. Inject the framework
       libraries need. Microsoft.Maui.Essentials alone is not enough - it has none of them.
       Since .NET 8 the UseMaui* properties no longer add the package reference implicitly (MA002).
     -->
-    <PackageReference Include="Microsoft.Maui.Core" Version="$(MauiVersion)" />
+    <PackageReference Include="Microsoft.Maui.Core" Version="10.0.101" />
   </ItemGroup>
 
 </Project>

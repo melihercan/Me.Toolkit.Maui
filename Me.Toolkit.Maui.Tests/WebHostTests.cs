@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using FluentAssertions;
+using AwesomeAssertions;
 using Me.Toolkit.Maui.WebHostPatch;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;

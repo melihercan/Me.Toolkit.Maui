@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using Me.Toolkit.Maui.Configuration;
 using Me.Toolkit.Maui.Hosting;
 using Microsoft.Extensions.Configuration;
