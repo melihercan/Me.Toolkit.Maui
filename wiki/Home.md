@@ -47,6 +47,17 @@ The `Xamarinme.*` packages stay on nuget.org as they are. Xamarin retiring is wh
 
 ## Where things are
 
+How to use each package — install, usage, options, platform requirements — is in its README, the
+same text nuget.org shows:
+
+- **[Configuration](https://github.com/melihercan/Me.Toolkit.Maui/blob/master/Me.Toolkit.Maui.Configuration/README.md)** — `appsettings.json` from the app package or embedded resources.
+- **[Hosting](https://github.com/melihercan/Me.Toolkit.Maui/blob/master/Me.Toolkit.Maui.Hosting/README.md)** — a host environment name, so `IsDevelopment()` means something.
+- **[Sizing](https://github.com/melihercan/Me.Toolkit.Maui/blob/master/Me.Toolkit.Maui.Sizing/README.md)** — relative sizes: a percentage of the parent, window, display or another element.
+- **[WebHostPatch](https://github.com/melihercan/Me.Toolkit.Maui/blob/master/Me.Toolkit.Maui.WebHostPatch/README.md)** — an ASP.NET Core web host and Kestrel inside a MAUI app.
+- **[Nfc](https://github.com/melihercan/Me.Toolkit.Maui/blob/master/Me.Toolkit.Maui.Nfc/README.md)** — NDEF on Android and iOS; not published.
+
+About the repository itself:
+
 - **[Building and Testing](Building-and-Testing)** — the commands, why the build is not
   warning-free, and what the test suite covers.
 - **[Design Notes](Design-Notes)** — why the repository looks like this, and the invariants.
