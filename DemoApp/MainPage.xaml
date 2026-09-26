@@ -326,6 +326,25 @@
                                     </VerticalStackLayout>
                                 </Border>
 
+                                <!-- Orientation is the window's shape, not the parent's: this card
+                                     is wider than it is tall in a portrait window too. -->
+                                <Border Style="{StaticResource Card}">
+                                    <VerticalStackLayout Spacing="6">
+                                        <Label Style="{StaticResource Caption}" Text="90% IN A PORTRAIT WINDOW, 45% IN A LANDSCAPE ONE" />
+                                        <BoxView
+                                            x:Name="Oriented"
+                                            HeightRequest="20"
+                                            HorizontalOptions="Start"
+                                            Color="#D4722B"
+                                            WidthRequest="{me:Relative Portrait=90, Landscape=45}" />
+                                        <Label
+                                            x:DataType="BoxView"
+                                            BindingContext="{x:Reference Oriented}"
+                                            Style="{StaticResource Value}"
+                                            Text="{Binding Width, StringFormat='measured {0:F0}'}" />
+                                    </VerticalStackLayout>
+                                </Border>
+
                             </VerticalStackLayout>
                         </ScrollView>
                     </tabView:SfTabItem.Content>

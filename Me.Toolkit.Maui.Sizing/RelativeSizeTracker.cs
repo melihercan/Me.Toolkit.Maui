@@ -26,6 +26,7 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
     private readonly List<Element> _ancestors = [];
     private VisualElement? _reference;
     private Window? _window;
+    private Window? _orientationWindow;
     private bool _display;
     private double? _value;
 
@@ -108,6 +109,18 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
             }
         }
 
+        // Orientation is the window's shape, whatever the size is measured against, so a Portrait
+        // or Landscape override listens to the window as well as to the reference. The element's
+        // Window property changing already re-attaches, which covers arriving in a window.
+        if (_size.DependsOnOrientation)
+        {
+            _orientationWindow = _element.Window;
+            if (_orientationWindow is not null)
+            {
+                _orientationWindow.SizeChanged += OnReferenceChanged;
+            }
+        }
+
         Update();
     }
 
@@ -133,6 +146,12 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
             _window = null;
         }
 
+        if (_orientationWindow is not null)
+        {
+            _orientationWindow.SizeChanged -= OnReferenceChanged;
+            _orientationWindow = null;
+        }
+
         if (_display)
         {
             DisplaySize.Current.Changed -= OnReferenceChanged;
@@ -153,7 +172,10 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
         }
     }
 
-    private void Update() => Value = ReferenceSize() is { } size ? _size.Resolve(size) : null;
+    private void Update() =>
+        Value = ReferenceSize() is { } size
+            ? _size.Resolve(size, _orientationWindow is { } w ? Available(w.Width, w.Height, Thickness.Zero) : null)
+            : null;
 
     private Size? ReferenceSize()
     {

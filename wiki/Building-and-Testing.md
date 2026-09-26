@@ -131,7 +131,7 @@ the truth. `MultiTargetingTests` asserts the file exists for every slice.
 
 ## The test suite
 
-170 tests in one project, all passing.
+179 tests in one project, all passing.
 
 | File | Covers |
 |---|---|
@@ -204,6 +204,8 @@ checked by breaking the thing it guards:
 | Never drop the display subscription | 1 failure |
 | Stop watching the ancestors of an `AncestorType` reference | 1 failure |
 | Ignore the element's `Window` changing | 3 failures |
+| Take orientation from the reference instead of the window | 6 failures |
+| Count a square window as landscape | 1 failure |
 
 The suite is then run 30 times in a row against the restored tree, with no flakes.
 

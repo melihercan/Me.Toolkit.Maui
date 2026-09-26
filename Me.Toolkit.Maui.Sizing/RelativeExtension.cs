@@ -24,6 +24,18 @@ public sealed class RelativeExtension : IMarkupExtension<BindingBase>
     /// <summary>The percentage of the reference, so <c>30</c> is 30%.</summary>
     public double Percent { get; set; }
 
+    /// <summary>
+    /// The percentage while the window is portrait, instead of <see cref="Percent"/>. Unset means
+    /// <see cref="Percent"/>. See <see cref="RelativeSize.Portrait"/>.
+    /// </summary>
+    public double? Portrait { get; set; }
+
+    /// <summary>
+    /// The percentage while the window is landscape, instead of <see cref="Percent"/>. Unset means
+    /// <see cref="Percent"/>. See <see cref="RelativeSize.Landscape"/>.
+    /// </summary>
+    public double? Landscape { get; set; }
+
     /// <summary>What the size is a percentage of. Defaults to <see cref="SizeReference.Parent"/>.</summary>
     public SizeReference To { get; set; } = SizeReference.Parent;
 
@@ -76,6 +88,8 @@ public sealed class RelativeExtension : IMarkupExtension<BindingBase>
 
         return RelativeSizeExtensions.CreateBinding(element, property, new RelativeSize(Percent)
         {
+            Portrait = Portrait,
+            Landscape = Landscape,
             To = To,
             Axis = Axis,
             Min = Min,

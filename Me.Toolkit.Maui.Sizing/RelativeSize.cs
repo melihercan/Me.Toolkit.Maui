@@ -11,6 +11,8 @@ namespace Me.Toolkit.Maui.Sizing;
 public sealed class RelativeSize
 {
     private readonly double _percent;
+    private readonly double? _portrait;
+    private readonly double? _landscape;
     private readonly double _min;
     private readonly double _max = double.PositiveInfinity;
 
@@ -27,6 +29,36 @@ public sealed class RelativeSize
         get => _percent;
         init => _percent = FiniteNonNegative(value);
     }
+
+    /// <summary>
+    /// The percentage to use instead of <see cref="Percent"/> while the window is portrait — taller
+    /// than it is wide, or square. <see langword="null"/>, the default, means <see cref="Percent"/>.
+    /// </summary>
+    /// <remarks>
+    /// Orientation is the shape of the element's <em>window</em>, whatever the size is measured
+    /// against: a parent card is wider than it is tall on a portrait phone too. On a phone that is
+    /// the screen's orientation; on a desktop a tall, narrow window is portrait. Until the element is
+    /// in a window, <see cref="Percent"/> applies.
+    /// </remarks>
+    public double? Portrait
+    {
+        get => _portrait;
+        init => _portrait = value is { } percent ? FiniteNonNegative(percent) : null;
+    }
+
+    /// <summary>
+    /// The percentage to use instead of <see cref="Percent"/> while the window is landscape — wider
+    /// than it is tall. <see langword="null"/>, the default, means <see cref="Percent"/>.
+    /// </summary>
+    /// <remarks>See <see cref="Portrait"/> for what decides the orientation.</remarks>
+    public double? Landscape
+    {
+        get => _landscape;
+        init => _landscape = value is { } percent ? FiniteNonNegative(percent) : null;
+    }
+
+    /// <summary>Whether the result depends on the window's orientation.</summary>
+    internal bool DependsOnOrientation => Portrait is not null || Landscape is not null;
 
     /// <summary>
     /// What the size is a percentage of. Defaults to <see cref="SizeReference.Parent"/>. Leave it
@@ -96,8 +128,20 @@ public sealed class RelativeSize
     }
 
     /// <summary>Applies the axis, the percentage and the clamp to a reference size.</summary>
-    internal double Resolve(Size reference)
+    /// <param name="reference">The size being measured against.</param>
+    /// <param name="window">
+    /// The element's window size, which decides the orientation, or <see langword="null"/> when it
+    /// is not in one — in which case <see cref="Percent"/> applies.
+    /// </param>
+    internal double Resolve(Size reference, Size? window = null)
     {
+        var percent = window switch
+        {
+            { } w when w.Width > w.Height => Landscape ?? Percent,
+            { } => Portrait ?? Percent,
+            null => Percent,
+        };
+
         var dimension = Axis switch
         {
             SizeAxis.Width => reference.Width,
@@ -107,7 +151,7 @@ public sealed class RelativeSize
             _ => throw new InvalidOperationException($"Unknown axis {Axis}."),
         };
 
-        return Math.Clamp(dimension * Percent / 100, Min, Max);
+        return Math.Clamp(dimension * percent / 100, Min, Max);
     }
 
     private static double FiniteNonNegative(double value) =>

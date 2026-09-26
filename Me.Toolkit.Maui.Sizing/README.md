@@ -33,6 +33,7 @@ No registration is needed. It works on any `double` property: `WidthRequest`, `H
 | Option | Values | Default |
 |---|---|---|
 | `Percent` (first argument) | `30` is 30% | — |
+| `Portrait`, `Landscape` | a different percentage per window orientation | `Percent` |
 | `To` | `Parent`, `Window`, `Display` | `Parent` |
 | `Axis` | `Width`, `Height`, `Shorter`, `Longer` | `Width` |
 | `Min`, `Max` | clamp the result | 0, no limit |
@@ -45,6 +46,27 @@ From code:
 label.SetRelativeSize(Label.FontSizeProperty,
     new RelativeSize(3) { To = SizeReference.Window, Min = 12, Max = 40 });
 ```
+
+## Portrait and landscape
+
+Rotation needs nothing special: it changes the window's size, so every relative size recomputes.
+`Axis=Shorter` or `Longer` gives a size rotation does not change at all.
+
+For a *different percentage* per orientation, name one or both:
+
+```xml
+<!-- the full width in portrait, half of it side by side in landscape -->
+<Image WidthRequest="{me:Relative Portrait=90, Landscape=45}" />
+
+<!-- 50% unless the window is landscape -->
+<Image WidthRequest="{me:Relative 50, Landscape=25}" />
+```
+
+Orientation is the shape of the element's **window** — landscape when it is wider than tall,
+portrait otherwise, square included — whatever the size is measured against. A card is wider than
+it is tall on a portrait phone too, so the reference's own shape would say "landscape" almost
+everywhere. On a phone the window's shape is the screen's orientation; on a desktop, a tall narrow
+window counts as portrait. Until the element is in a window, `Percent` applies.
 
 ## With OnIdiom and OnPlatform
 

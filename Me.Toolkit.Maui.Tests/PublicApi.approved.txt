@@ -61,6 +61,8 @@ assembly Me.Toolkit.Maui.Sizing
     property System.Double Max { get; set; }
     property System.Double Min { get; set; }
     property System.Double Percent { get; set; }
+    property System.Nullable<System.Double> Landscape { get; set; }
+    property System.Nullable<System.Double> Portrait { get; set; }
     property System.Type AncestorType { get; set; }
   type Me.Toolkit.Maui.Sizing.RelativeSize : sealed class
     ctor .ctor(System.Double percent)
@@ -70,6 +72,8 @@ assembly Me.Toolkit.Maui.Sizing
     property System.Double Max { get; set; }
     property System.Double Min { get; set; }
     property System.Double Percent { get; set; }
+    property System.Nullable<System.Double> Landscape { get; set; }
+    property System.Nullable<System.Double> Portrait { get; set; }
     property System.Type AncestorType { get; set; }
   type Me.Toolkit.Maui.Sizing.RelativeSizeExtensions : static class
     method static T SetRelativeSize<T>(T element, Microsoft.Maui.Controls.BindableProperty property, Me.Toolkit.Maui.Sizing.RelativeSize size)

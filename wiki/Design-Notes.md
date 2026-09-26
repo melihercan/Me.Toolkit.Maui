@@ -266,6 +266,14 @@ demo, since the net10.0 slice has no idiom:
   `OnIdiom`'s result with `SetValue`, which cannot carry a binding. It throws a message giving the
   working spelling.
 
+**Orientation is the window's shape, not the reference's.** `Portrait` and `Landscape` override
+`Percent` per orientation. The first design took the orientation from the reference, which is
+wrong in the common case: a parent card is wider than it is tall on a portrait phone too, so it
+would have said "landscape" nearly everywhere. The tracker therefore watches the element's window
+as well as its reference whenever an override is set. A square window counts as portrait, and
+outside a window `Percent` applies. MAUI has no `OnOrientation`, and a separate one nested inside
+would be evaluated once at load and never again after a rotation, so it lives in the extension.
+
 **Unlike `Me.Toolkit.Maui.Nfc`, it has real behavioural coverage.** Elements, windows, bindings and
 the runtime XAML loader all run on the net10.0 slice of Controls, so the tests arrange real
 elements with `IView.Arrange`, resize real windows with `IWindow.FrameChanged`, and load real XAML.

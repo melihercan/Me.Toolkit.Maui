@@ -645,6 +645,13 @@ pixel-to-device-independent conversion is right. iOS and Android are compile-ver
 
 Not published: no tag packs it yet.
 
+`Portrait` and `Landscape` followed, for a different percentage per orientation. Orientation is the
+window's shape rather than the reference's — a card is landscape-shaped on a portrait phone — and
+three mutations (taking it from the reference, not listening to the window, counting a square as
+landscape) each failed tests. On the running demo the same bar read 685 in a landscape window and
+711 in a narrower portrait one: the window shrank and the bar grew, because the percentage switched
+from 45 to 90.
+
 ## Settled, and not to be reopened
 
 - **`26.9.8` is the version.** Date-based, matching Blazorme and Utilme. Publishing it closes the

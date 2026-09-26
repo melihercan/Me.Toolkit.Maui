@@ -146,6 +146,8 @@ display, an `x:Reference` or an `AncestorType`.
 - **`OnIdiom` nests inside, as a named argument only**: `{me:Relative Percent={OnIdiom ...}}`. The
   positional form crashes in MAUI's source generator, and nesting the other way cannot work; both
   were found by running the demo, not by tests, because the net10.0 slice has no idiom.
+- **`Portrait`/`Landscape` take orientation from the element's window**, never from the reference —
+  a card is landscape-shaped on a portrait phone. The tracker watches the window for them.
 - **Its tests are behavioural** and need `InlineDispatcher.Install()`: without a dispatcher, every
   binding update after the first throws.
 

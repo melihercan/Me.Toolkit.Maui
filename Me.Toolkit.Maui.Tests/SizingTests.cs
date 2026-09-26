@@ -231,6 +231,77 @@ public class SizingTests
         label.FontSize.Should().NotBe(60);
     }
 
+    private static (BoxView Child, Window Window) InWindowWithParent(double windowWidth, double windowHeight)
+    {
+        // The parent is wide whatever the window is doing, as a card usually is — which is why the
+        // orientation has to come from the window rather than from the reference.
+        var child = new BoxView();
+        var parent = new Grid { child };
+        var window = InWindow(parent, windowWidth, windowHeight);
+        Arrange(parent, 300, 100);
+
+        return (child, window);
+    }
+
+    [Fact]
+    public void Portrait_and_Landscape_follow_the_window_shape_not_the_reference()
+    {
+        var (child, window) = InWindowWithParent(400, 800);
+        child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(50) { Portrait = 90, Landscape = 45 });
+
+        child.WidthRequest.Should().Be(270, "a portrait window, even though the parent is landscape-shaped");
+
+        ((IWindow)window).FrameChanged(new Rect(0, 0, 800, 400));
+        child.WidthRequest.Should().Be(135, "rotated to landscape");
+
+        ((IWindow)window).FrameChanged(new Rect(0, 0, 400, 800));
+        child.WidthRequest.Should().Be(270, "and back");
+    }
+
+    [Theory]
+    [InlineData(400, 800, 50)]
+    [InlineData(800, 400, 25)]
+    public void An_unset_override_falls_back_to_Percent(double windowWidth, double windowHeight, double expectedPercent)
+    {
+        var (child, _) = InWindowWithParent(windowWidth, windowHeight);
+
+        child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(50) { Landscape = 25 });
+
+        child.WidthRequest.Should().Be(300 * expectedPercent / 100);
+    }
+
+    [Fact]
+    public void A_square_window_counts_as_portrait()
+    {
+        var (child, _) = InWindowWithParent(600, 600);
+
+        child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(50) { Portrait = 10, Landscape = 20 });
+
+        child.WidthRequest.Should().Be(30);
+    }
+
+    [Fact]
+    public void Outside_a_window_Percent_applies()
+    {
+        var (_, child) = ParentAndChild(300, 100);
+
+        child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(50) { Portrait = 10, Landscape = 20 });
+
+        child.WidthRequest.Should().Be(150);
+    }
+
+    [Fact]
+    public void Leaving_the_window_stops_following_its_orientation()
+    {
+        var (child, window) = InWindowWithParent(400, 800);
+        child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(50) { Portrait = 90, Landscape = 45 });
+
+        ((ContentPage)window.Page!).Content = null;
+        ((IWindow)window).FrameChanged(new Rect(0, 0, 800, 400));
+
+        child.WidthRequest.Should().Be(150, "out of the window, Percent applies and the window is no longer observed");
+    }
+
     [Fact]
     public void A_named_element_is_measured_instead_of_the_parent()
     {
@@ -323,6 +394,8 @@ public class SizingTests
         { "null element", () => ((Label)null!).SetRelativeSize(Label.FontSizeProperty, new RelativeSize(1)) },
         { "null property", () => new Label().SetRelativeSize(null!, new RelativeSize(1)) },
         { "null size", () => new Label().SetRelativeSize(Label.FontSizeProperty, null!) },
+        { "negative Portrait", () => _ = new RelativeSize(1) { Portrait = -1 } },
+        { "infinite Landscape", () => _ = new RelativeSize(1) { Landscape = double.PositiveInfinity } },
     };
 
     private const string Namespaces =
@@ -360,6 +433,28 @@ public class SizingTests
 
         grid.FindByName<BoxView>("BySource").WidthRequest.Should().Be(150);
         grid.FindByName<BoxView>("ByAncestor").WidthRequest.Should().Be(100);
+    }
+
+    [Fact]
+    public void The_markup_extension_takes_Portrait_and_Landscape()
+    {
+        // Nullable doubles from XAML text, and no Percent at all: both orientations are named.
+        var grid = new Grid().LoadFromXaml($$$"""
+            <Grid {{{Namespaces}}}>
+              <BoxView x:Name="Both" WidthRequest="{me:Relative Portrait=90, Landscape=45}" />
+              <BoxView x:Name="One" WidthRequest="{me:Relative 50, Landscape=20}" />
+            </Grid>
+            """);
+        var window = InWindow(grid, 400, 800);
+        Arrange(grid, 1000, 200);
+
+        grid.FindByName<BoxView>("Both").WidthRequest.Should().Be(900);
+        grid.FindByName<BoxView>("One").WidthRequest.Should().Be(500);
+
+        ((IWindow)window).FrameChanged(new Rect(0, 0, 800, 400));
+
+        grid.FindByName<BoxView>("Both").WidthRequest.Should().Be(450);
+        grid.FindByName<BoxView>("One").WidthRequest.Should().Be(200);
     }
 
     [Fact]
