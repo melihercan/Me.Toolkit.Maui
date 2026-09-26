@@ -694,6 +694,28 @@ does not change on rotation. `OnIdiom` picked the phone value on a real phone.
 Rotated back to portrait, every value returned exactly — 290, 258, 161 × 91, 157 — in the same
 process. Not checked: iOS.
 
+## Phase 11 — publishing Sizing, and a version that was never stamped
+
+`Me.Toolkit.Maui.Sizing` 26.9.26 was the first push of a new package ID, and the Trusted Publishing
+policy accepted it. CI had been green, the publish job's checks had passed, and nuget.org answered
+`201 Created`.
+
+Unzipping what nuget.org then served found the fault none of that could: the `net10.0` assembly
+read **`1.0.0.0`**, the other four `26.9.26.0`. The three packages released at `26.9.14` had it too,
+so it dated from `bf35edd`, which took the version out of the csprojs and passed it to build and
+pack — but not to test. `dotnet test` rebuilt the `net10.0` slice of each referenced library without
+it, over the stamped build, and `Pack --no-build` packed the result. Reproduced locally before
+anything was changed.
+
+The test project is now built with the version and tested with `--no-build`, and a new publish step
+reads the version out of every assembly; it was run against the served 26.9.26, which it fails, and
+a 26.9.27 built the fixed way, which it passes. All four packages were re-released as `26.9.27` —
+identical code, since nothing in the three older libraries had changed since `26.9.14` — and the
+served packages were unzipped again, every assembly reading `26.9.27.0`.
+
+The release notes first said 26.9.26 "is unlisted", and were corrected before tagging: unlisting is
+done by hand, later, and the notes are baked into the package for good.
+
 ## Settled, and not to be reopened
 
 - **`26.9.8` is the version.** Date-based, matching Blazorme and Utilme. Publishing it closes the

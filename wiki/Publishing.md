@@ -32,12 +32,32 @@ that is already out, and it cannot distinguish that from a refusal — the first
 these packages was rejected three times with `409 The package ID is reserved` and reported success,
 because that is a 409 like any other. Only a manual run can ask for it.
 
-## `Me.Toolkit.Maui.Sizing` creates a new package ID
+## `Me.Toolkit.Maui.Sizing` was a new package ID
 
-It has a trigger and is in the `v<version>` set, but has never been pushed. Its first push creates
-the `Me.Toolkit.Maui.Sizing` ID, which only the Trusted Publishing policy's **"Push new packages and
-package versions"** scope allows — see [The policy](#the-policy). A `v<version>` tag now publishes
-all four packages; tag `sizing-v<version>` to release it alone.
+Its first push, 26.9.26, created the `Me.Toolkit.Maui.Sizing` ID, which only the Trusted Publishing
+policy's **"Push new packages and package versions"** scope allows — see [The policy](#the-policy).
+It went through first time. A `v<version>` tag publishes all four packages; `sizing-v<version>`
+releases it alone.
+
+## Every assembly carries the package version — checked, since it once did not
+
+`26.9.14` of Configuration, Hosting and WebHostPatch, and Sizing's first release `26.9.26`, shipped
+with the right package version and a `net10.0` assembly stamped **`1.0.0.0`**; the other four
+slices were right. It was found by reading `AssemblyName` out of the package nuget.org served, and
+was invisible from every other angle — id, version, frameworks, file names, README, icon.
+
+The build step stamped every slice correctly. The test step then ran `dotnet test` without the
+version, which rebuilt the `net10.0` slice of each library the tests reference over the stamped
+one, and `Pack --no-build` packed what was left. Reproduced locally: `26.9.26.0` after the build,
+`1.0.0.0` after the tests.
+
+Now the build step builds the test project too, with the version, and the tests run with
+`--no-build` — so they run against exactly the files that are packed. **"Verify every assembly
+carries the package version"** reads the version out of every assembly in every package before the
+push; it fails the old `26.9.26` on its `net10.0` slice alone.
+
+`26.9.27` is that fix and nothing else, for all four. The affected versions are to be unlisted, as
+`26.9.8` was — by hand on nuget.org, since no API key is held here.
 
 ## `Me.Toolkit.Maui.Nfc` is not published
 

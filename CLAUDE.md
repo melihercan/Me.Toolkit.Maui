@@ -9,7 +9,7 @@ A port of [Xamarinme](https://github.com/melihercan/Xamarinme) to .NET MAUI. Xam
 this is a port, not a framework bump: new repository, fresh git history, **new package IDs**
 (`Me.Toolkit.Maui.*`), and a per-library question of whether the library should exist at all.
 
-**Three of the four are published at `26.9.9`; `Me.Toolkit.Maui.Nfc` is held back.** The work is phased, one commit per phase on `master`, and each phase
+**Four of the five are published at `26.9.27`; `Me.Toolkit.Maui.Nfc` is held back.** The work is phased, one commit per phase on `master`, and each phase
 needs a go-ahead. Phases 0 (characterization), 1 (the MAUI skeleton), 2 (`Me.Toolkit.Maui.Nfc`), 3 (the other
 three libraries) and 4 (retiring `legacy/`, adding CI) are done. **All four libraries are ported and
 the build is clean under `-warnaserror`.** What remains is the demo app, package metadata, and
@@ -133,8 +133,7 @@ way.
 
 ## Me.Toolkit.Maui.Sizing
 
-New, not a port, and **not published yet** — `sizing-v*` and `v*` tags pack it; its first push
-creates the package ID. Relative sizes:
+New, not a port, **published at 26.9.27** — `sizing-v*` and `v*` tags pack it. Relative sizes:
 `{me:Relative 30}` in XAML, `SetRelativeSize` in code, against the parent (less padding), window,
 display, an `x:Reference` or an `AncestorType`.
 
@@ -183,7 +182,10 @@ Versions are date-based, and **no csproj declares one: the tag is the version.**
 normalises it (`v26.09.26` → `26.9.26`) and passes it to both build and pack — the build too, since
 it packs with `--no-build`. Do not add `<Version>` back.
 
-Verify a packaging change by **unzipping the `.nupkg`**, not by reading the build log.
+Verify a packaging change by **unzipping the `.nupkg`**, not by reading the build log — and read the
+assembly versions out of it: 26.9.14 and 26.9.26 shipped a `net10.0` slice stamped 1.0.0.0 because
+`dotnet test` rebuilt it. The publish job now tests with `--no-build` and checks every assembly's
+version; keep both.
 
 ## The Xamarinme packages are staying as they are
 
