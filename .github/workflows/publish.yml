@@ -151,19 +151,28 @@ jobs:
         env:
           # From the tag on a release, from today's date on a manual run. Never a csproj.
           VERSION: ${{ steps.version.outputs.value || steps.targets.outputs.version }}
+        #
+        # The test project is built here too, with the same version, so the Test step can run with
+        # --no-build. Without that, dotnet test rebuilt the net10.0 slice of every library the tests
+        # reference - with no version, so 1.0.0.0 - over the one built here, and Pack --no-build
+        # packed the overwritten file. 26.9.14 and Sizing 26.9.26 shipped a net10.0 assembly stamped
+        # 1.0.0.0 inside packages whose other four slices were right.
         run: |
-          foreach ($project in 'Me.Toolkit.Maui.Configuration','Me.Toolkit.Maui.Hosting','Me.Toolkit.Maui.Nfc','Me.Toolkit.Maui.Sizing','Me.Toolkit.Maui.WebHostPatch') {
+          foreach ($project in 'Me.Toolkit.Maui.Configuration','Me.Toolkit.Maui.Hosting','Me.Toolkit.Maui.Nfc','Me.Toolkit.Maui.Sizing','Me.Toolkit.Maui.WebHostPatch','Me.Toolkit.Maui.Tests') {
             dotnet build "$project/$project.csproj" --configuration Release -warnaserror -p:Version="$env:VERSION"
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 
       # Never publish a package whose tests do not pass.
       #
+      # --no-build, so the tests run against exactly the files that are packed - see Build
+      # libraries for what rebuilding here cost.
+      #
       # Do not add --nologo, -warnaserror, or any other flag Microsoft.Testing.Platform does not
       # know: it forwards unrecognised arguments to the test executable, which exits 5 having run
       # nothing. See the same warning in ci.yml, where it really happened.
       - name: Test
-        run: dotnet test --project Me.Toolkit.Maui.Tests/Me.Toolkit.Maui.Tests.csproj --configuration Release
+        run: dotnet test --project Me.Toolkit.Maui.Tests/Me.Toolkit.Maui.Tests.csproj --configuration Release --no-build
 
       # --no-build, so what is published is exactly what the tests just ran against.
       - name: Pack
@@ -251,6 +260,35 @@ jobs:
             } else {
               Write-Host "$($package.Name): all $($assemblies.Count) assemblies named $id"
             }
+          }
+
+          if ($failed) { exit 1 }
+
+      # 26.9.14 and Sizing 26.9.26 were published with the right package version and a net10.0
+      # assembly stamped 1.0.0.0, because the Test step had rebuilt it without the version. The
+      # package looked right from every angle but one: reading the version out of each assembly.
+      # So that is checked here, for every slice, before the push.
+      - name: Verify every assembly carries the package version
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.value || steps.targets.outputs.version }}
+        run: |
+          $expected = [Version]::new("$env:VERSION.0")
+          $failed = $false
+
+          foreach ($package in Get-ChildItem artifacts/*.nupkg) {
+            $dir = Join-Path $env:RUNNER_TEMP $package.BaseName
+            Expand-Archive $package.FullName $dir -Force
+
+            foreach ($dll in Get-ChildItem (Join-Path $dir 'lib') -Recurse -Filter *.dll) {
+              $actual = [Reflection.AssemblyName]::GetAssemblyName($dll.FullName).Version
+              if ($actual -ne $expected) {
+                Write-Host "::error::$($package.Name): $($dll.Directory.Name)/$($dll.Name) is $actual, expected $expected"
+                $failed = $true
+              }
+            }
+
+            Write-Host "$($package.Name): checked against $expected"
           }
 
           if ($failed) { exit 1 }

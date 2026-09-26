@@ -11,7 +11,8 @@
     <Description>Relative sizes for .NET MAUI: a percentage of the parent, the window, the display or another element, in XAML or code.
 WidthRequest="{me:Relative 30}" is 30% of the parent's width, and stays that way as the window is resized or the phone rotated. Works on any double property - WidthRequest, HeightRequest, FontSize, Spacing - with Min and Max to clamp it.</Description>
     <PackageTags>maui xaml markup-extension responsive relative size percentage viewport</PackageTags>
-    <PackageReleaseNotes>First release.
+    <PackageReleaseNotes>26.9.27 stamps the net10.0 assembly with the package version. 26.9.26 shipped it as 1.0.0.0 - the publish workflow's test step rebuilt that slice without the version before packing - while the Android, iOS, Mac Catalyst and Windows assemblies were right. 26.9.26 is unlisted. Nothing else changed.
+First release, 26.9.26.
 {me:Relative} and SetRelativeSize size a double property as a percentage of the parent (less its padding), the window, the main display, an element named with x:Reference, or the nearest ancestor of a type. Width, Height, Shorter and Longer pick the dimension; Min and Max clamp the result; Portrait and Landscape give a different percentage for each orientation of the window. To=Self keeps an aspect ratio, Offset gives calc(50% - 8), and RelativeSizing's attached properties let a Style carry a relative size. The value is recomputed whenever the reference changes size or the element moves in the tree.</PackageReleaseNotes>
   </PropertyGroup>
 
