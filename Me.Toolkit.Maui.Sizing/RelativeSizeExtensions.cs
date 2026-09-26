@@ -31,6 +31,46 @@ public static class RelativeSizeExtensions
         return element;
     }
 
+    /// <summary>
+    /// Removes a relative size from <paramref name="property"/> and returns it to its default value.
+    /// </summary>
+    /// <param name="element">The element.</param>
+    /// <param name="property">The property a relative size was applied to.</param>
+    /// <remarks>
+    /// Not the same as <c>RemoveBinding</c>: MAUI keeps the last value a removed binding set, and
+    /// <c>ClearValue</c> does not take it back — true of any binding, not just this one. So the
+    /// binding is first told there is no size, which makes MAUI apply the property's own default,
+    /// and only then removed.
+    /// </remarks>
+    public static void ClearRelativeSize(this VisualElement element, BindableProperty property)
+    {
+        ArgumentNullException.ThrowIfNull(element);
+        ArgumentNullException.ThrowIfNull(property);
+
+        if (Trackers(element).Remove(property, out var tracker))
+        {
+            tracker.Stop();
+            element.RemoveBinding(property);
+        }
+    }
+
+    // One tracker per element and property, so replacing or clearing a relative size stops the old
+    // tracker rather than leaving it listening to a reference nothing reads any more.
+    private static readonly BindableProperty TrackersProperty = BindableProperty.CreateAttached(
+        "RelativeSizeTrackers", typeof(Dictionary<BindableProperty, RelativeSizeTracker>), typeof(RelativeSizeExtensions),
+        defaultValue: null);
+
+    private static Dictionary<BindableProperty, RelativeSizeTracker> Trackers(VisualElement element)
+    {
+        if (element.GetValue(TrackersProperty) is not Dictionary<BindableProperty, RelativeSizeTracker> trackers)
+        {
+            trackers = [];
+            element.SetValue(TrackersProperty, trackers);
+        }
+
+        return trackers;
+    }
+
     internal static BindingBase CreateBinding(VisualElement element, BindableProperty property, RelativeSize size)
     {
         size.Validate();
@@ -43,7 +83,26 @@ public static class RelativeSizeExtensions
                 nameof(property));
         }
 
+        // A size of the element itself must read the other dimension than the one it sets, or every
+        // change it makes feeds straight back into it. Shorter and Longer read both.
+        if (size.To == SizeReference.Self && size.Source is null && size.AncestorType is null
+            && ((property == VisualElement.WidthRequestProperty && size.Axis != SizeAxis.Height)
+                || (property == VisualElement.HeightRequestProperty && size.Axis != SizeAxis.Width)))
+        {
+            throw new ArgumentException(
+                $"To=Self on {property.PropertyName} with Axis={size.Axis} would size the element from the "
+                + $"dimension it is setting. Use Axis={(property == VisualElement.WidthRequestProperty ? "Height" : "Width")}.",
+                nameof(size));
+        }
+
+        var trackers = Trackers(element);
+        if (trackers.Remove(property, out var previous))
+        {
+            previous.Stop();
+        }
+
         var tracker = new RelativeSizeTracker(element, size);
+        trackers[property] = tracker;
 
         // TypedBinding rather than Binding("Value"): a string path is resolved by reflection, which
         // the trimmer cannot see, and iOS and Android Release builds trim. The binding holds the

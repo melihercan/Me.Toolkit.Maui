@@ -34,7 +34,8 @@ No registration is needed. It works on any `double` property: `WidthRequest`, `H
 |---|---|---|
 | `Percent` (first argument) | `30` is 30% | — |
 | `Portrait`, `Landscape` | a different percentage per window orientation | `Percent` |
-| `To` | `Parent`, `Window`, `Display` | `Parent` |
+| `To` | `Parent`, `Window`, `Display`, `Self` | `Parent` |
+| `Offset` | added after the percentage, may be negative | 0 |
 | `Axis` | `Width`, `Height`, `Shorter`, `Longer` | `Width` |
 | `Min`, `Max` | clamp the result | 0, no limit |
 | `Source` | an element, usually `{x:Reference}` | — |
@@ -46,6 +47,52 @@ From code:
 label.SetRelativeSize(Label.FontSizeProperty,
     new RelativeSize(3) { To = SizeReference.Window, Min = 12, Max = 40 });
 ```
+
+## Aspect ratios and gaps
+
+`To=Self` measures the element itself, padding included, so a height can follow the element's own
+width:
+
+```xml
+<!-- half the parent wide, always 16:9 -->
+<Image WidthRequest="{me:Relative 50}" HeightRequest="{me:Relative 56.25, To=Self}" />
+```
+
+It must read the other dimension than the one it sets — `HeightRequest` from `Width`,
+`WidthRequest` from `Height` — and anything else is refused, since it would chase its own value.
+
+`Offset` is added after the percentage and before `Min`/`Max`, which is CSS's `calc()`:
+
+```xml
+<!-- two halves side by side with an 8 gap: each is calc(50% - 4) -->
+<HorizontalStackLayout Spacing="8">
+    <BoxView WidthRequest="{me:Relative 50, Offset=-4, AncestorType={x:Type VerticalStackLayout}}" />
+    <BoxView WidthRequest="{me:Relative 50, Offset=-4, AncestorType={x:Type VerticalStackLayout}}" />
+</HorizontalStackLayout>
+```
+
+## In styles
+
+`{me:Relative}` cannot go in a `Style` setter — a setter is shared, and a relative size is tracked
+per element. `RelativeSizing`'s attached properties bridge the two:
+
+```xml
+<Style TargetType="Label">
+    <Setter Property="me:RelativeSizing.FontSize" Value="3, To=Window, Min=12, Max=40" />
+</Style>
+```
+
+The value is text with the same option names as `{me:Relative}`: an optional leading percentage,
+then `Name=Value` pairs. Numbers are read the same way in every culture. `Source` and `AncestorType`
+cannot be written as text, since text cannot name an element or a type.
+
+`RelativeSizing.WidthRequest`, `HeightRequest` and `FontSize` are available, and work directly on an
+element too: `<BoxView me:RelativeSizing.WidthRequest="25, Offset=10" />`. `FontSize` finds the
+property of whichever control it is on, including third-party ones with a `FontSizeProperty`.
+Removing the style removes the size, and the property goes back to its default.
+
+From code, `element.ClearRelativeSize(property)` does the same. Prefer it to `RemoveBinding`: MAUI
+keeps the last value a removed binding set, for any binding, and `ClearValue` does not take it back.
 
 ## Portrait and landscape
 
@@ -100,7 +147,7 @@ Setting the property directly replaces the relative size, as it would any bindin
 
 ## Things to know
 
-- **Not in a `Style` setter.** The size is tracked per element, and a setter is shared. It throws
+- **`{me:Relative}` is not for a `Style` setter** — use `RelativeSizing`, above. It throws
   saying so.
 - **Watch for layout loops.** A percentage of a parent that sizes itself to its content —
   `Auto` rows, a `VerticalStackLayout` in its stacking direction — makes the child depend on the

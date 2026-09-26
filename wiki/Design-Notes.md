@@ -274,6 +274,27 @@ as well as its reference whenever an override is set. A square window counts as 
 outside a window `Percent` applies. MAUI has no `OnOrientation`, and a separate one nested inside
 would be evaluated once at load and never again after a rotation, so it lives in the extension.
 
+**Styles go through attached properties.** A `Setter` is shared by every element its style
+applies to, and a relative size needs a tracker per element; a markup extension in a setter has no
+element to track. `RelativeSizing.FontSize` and friends hold an immutable `RelativeSize`, converted
+from text by `RelativeSizeTypeConverter`, and create each element's binding when set. The converter
+works under the XAML source generator — checked in the demo, not assumed.
+
+**Clearing needed more than `RemoveBinding`.** MAUI keeps the last value a removed binding set, and
+`ClearValue` does not remove it — for an ordinary `Binding` too, checked side by side. So
+`ClearRelativeSize` first stops the tracker, which makes the binding report no value and MAUI apply
+the property's default, and only then removes the binding. Each element keeps one tracker per
+property, so replacing a relative size stops the old tracker; that was only observable through the
+display's listener count, and a test now watches it.
+
+**`To=Self` and `Offset`** give aspect ratios and `calc(50% - 8)`. `Self` includes the element's
+padding, since a ratio is of the outside, and a `Self` size that reads the dimension it sets is
+refused.
+
+**It has run on a phone.** Portrait to landscape on an Android 16 device, every card recomputed
+live and matched its expected value; see the [Modernization Log](Modernization-Log). iOS has not
+been run.
+
 **Unlike `Me.Toolkit.Maui.Nfc`, it has real behavioural coverage.** Elements, windows, bindings and
 the runtime XAML loader all run on the net10.0 slice of Controls, so the tests arrange real
 elements with `IView.Arrange`, resize real windows with `IWindow.FrameChanged`, and load real XAML.

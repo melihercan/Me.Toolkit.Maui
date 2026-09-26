@@ -17,4 +17,12 @@ public enum SizeReference
     /// several monitors it is the main one, not necessarily the one the window is on.
     /// </summary>
     Display = 2,
+
+    /// <summary>
+    /// The element's own laid-out size, for a fixed aspect ratio: a <c>HeightRequest</c> of 56.25%
+    /// of its own width is 16:9. It must measure the other dimension than the one it sets —
+    /// <c>HeightRequest</c> against <see cref="SizeAxis.Width"/>, <c>WidthRequest</c> against
+    /// <see cref="SizeAxis.Height"/> — or it would chase itself.
+    /// </summary>
+    Self = 3,
 }

@@ -652,6 +652,47 @@ landscape) each failed tests. On the running demo the same bar read 685 in a lan
 711 in a narrower portrait one: the window shrank and the bar grew, because the percentage switched
 from 45 to 90.
 
+Then `To=Self` for aspect ratios, `Offset` for `calc()`, and `RelativeSizing` attached properties so
+a `Style` can carry a relative size. Two findings:
+
+- **A removed binding leaves its last value behind**, and `ClearValue` does not take it back — for
+  any MAUI binding, shown side by side with a plain `Binding`. A label taken out of a relative style
+  kept its last font size. `ClearRelativeSize` now makes the binding push the default first.
+- **MAUI's runtime XAML loader is not thread-safe on first use.** With two test classes loading
+  XAML, one run in three failed with a duplicate-key error in its assembly cache. They now share an
+  xUnit collection; fifteen consecutive runs were clean. An app loads XAML on the UI thread and never
+  meets it.
+
+Six mutations, and one survived at first: not stopping a replaced tracker changes nothing visible,
+because its binding is already gone. A test now counts the display's listeners instead. On the
+running demo a 16:9 box read 762 × 429 and 195 × 110, two halves with `Offset=-4` filled their row
+exactly at 758 + 8 + 758, and a style-applied headline sat at its `Max` of 48 and at 18.7 in a
+narrow window.
+
+### On a phone, rotated
+
+Everything above was verified by resizing a desktop window. Then it ran on a Samsung Galaxy A17
+(Android 16, 1080×2340 at 450 dpi, so 384×832 device-independent), rotated by hand, and read from
+`adb exec-out screencap` screenshots of the same measured-value labels:
+
+| | Portrait | Landscape |
+|---|---|---|
+| `Portrait=90, Landscape=45` | 290 — 90% of 322 | 309 — 45% of 687 |
+| 30% of the parent | 97 | 206 |
+| 3% of the window, clamped 12–40 | 12.0, at `Min` | 25.0 — 3% of 832 |
+| 15% of the display's shorter side | 58 | 58 |
+| `OnIdiom Phone=80` | 258 | 549 |
+| 50%, `Offset=-4`, twice | 157 each | 340 each |
+| style, 4% of the window | 15.4 | 33.3 |
+| 16:9, `To=Self` | 161 × 91 | not captured |
+
+The app kept its process through the rotation, so these are live recomputations, not a restart.
+The display row is the one only a device could settle: 58 in both orientations is 15% of
+1080 px ÷ 2.8125, so the pixel-to-device-independent conversion holds on Android, and `Shorter`
+does not change on rotation. `OnIdiom` picked the phone value on a real phone.
+
+Not checked there: rotating back to portrait (the desktop run covered both directions), and iOS.
+
 ## Settled, and not to be reopened
 
 - **`26.9.8` is the version.** Date-based, matching Blazorme and Utilme. Publishing it closes the

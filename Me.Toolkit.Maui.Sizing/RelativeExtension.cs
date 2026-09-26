@@ -14,7 +14,8 @@ namespace Me.Toolkit.Maui.Sizing;
 /// <para>
 /// It works on any <see cref="double"/> bindable property of a <see cref="VisualElement"/>:
 /// <c>WidthRequest</c>, <c>HeightRequest</c>, <c>FontSize</c>, <c>Spacing</c> and so on. It cannot be
-/// used in a <see cref="Style"/> setter, because the size is tracked per element.
+/// used in a <see cref="Style"/> setter, because the size is tracked per element; for styles use
+/// <see cref="RelativeSizing"/>'s attached properties.
 /// </para>
 /// </remarks>
 [ContentProperty(nameof(Percent))]
@@ -35,6 +36,12 @@ public sealed class RelativeExtension : IMarkupExtension<BindingBase>
     /// <see cref="Percent"/>. See <see cref="RelativeSize.Landscape"/>.
     /// </summary>
     public double? Landscape { get; set; }
+
+    /// <summary>
+    /// A fixed amount added after the percentage, which may be negative: <c>{me:Relative 50, Offset=-8}</c>
+    /// is half the space less a gap. See <see cref="RelativeSize.Offset"/>.
+    /// </summary>
+    public double Offset { get; set; }
 
     /// <summary>What the size is a percentage of. Defaults to <see cref="SizeReference.Parent"/>.</summary>
     public SizeReference To { get; set; } = SizeReference.Parent;
@@ -65,7 +72,7 @@ public sealed class RelativeExtension : IMarkupExtension<BindingBase>
         if (target.TargetObject is Setter)
         {
             throw new NotSupportedException(
-                "{Relative} cannot be used in a Style Setter: the size is tracked per element. Set it on the element.");
+                "{Relative} cannot be used in a Style Setter: the size is tracked per element. Use an attached property instead: <Setter Property=\"me:RelativeSizing.FontSize\" Value=\"3, To=Window\" />.");
         }
 
         // Inside OnIdiom or OnPlatform the target is that extension, not the element, and MAUI does
@@ -90,6 +97,7 @@ public sealed class RelativeExtension : IMarkupExtension<BindingBase>
         {
             Portrait = Portrait,
             Landscape = Landscape,
+            Offset = Offset,
             To = To,
             Axis = Axis,
             Min = Min,

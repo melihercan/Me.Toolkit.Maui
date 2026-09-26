@@ -148,6 +148,15 @@ display, an `x:Reference` or an `AncestorType`.
   were found by running the demo, not by tests, because the net10.0 slice has no idiom.
 - **`Portrait`/`Landscape` take orientation from the element's window**, never from the reference —
   a card is landscape-shaped on a portrait phone. The tracker watches the window for them.
+- **Styles use `RelativeSizing` attached properties**, whose text goes through `RelativeSize.Parse`.
+  `{me:Relative}` cannot be in a setter.
+- **Clear with `ClearRelativeSize`, never `RemoveBinding` alone** — MAUI keeps a removed binding's
+  last value and `ClearValue` does not remove it.
+- **Test classes that load XAML share `XamlLoaderCollection`**: MAUI's runtime XAML loader races on
+  first use.
+- **Verified on an Android 16 phone**, portrait to landscape, by `adb` screenshots of the demo's
+  measured-value labels. Deploy with `-t:Install` and check `files/.__override__` first. iOS is
+  unrun.
 - **Its tests are behavioural** and need `InlineDispatcher.Install()`: without a dispatcher, every
   binding update after the first throws.
 

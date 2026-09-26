@@ -25,6 +25,7 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
     private readonly RelativeSize _size;
     private readonly List<Element> _ancestors = [];
     private VisualElement? _reference;
+    private bool _excludePadding;
     private Window? _window;
     private Window? _orientationWindow;
     private bool _display;
@@ -98,6 +99,11 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
 
                     break;
 
+                case SizeReference.Self:
+                    // The element's own box, padding included: an aspect ratio is of the outside.
+                    Observe(_element, excludePadding: false);
+                    break;
+
                 case SizeReference.Display:
                     if (_element.Window is not null)
                     {
@@ -159,9 +165,10 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
         }
     }
 
-    private void Observe(VisualElement? reference)
+    private void Observe(VisualElement? reference, bool excludePadding = true)
     {
         _reference = reference;
+        _excludePadding = excludePadding;
 
         if (_reference is not null)
         {
@@ -181,7 +188,8 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
     {
         if (_reference is not null)
         {
-            return Available(_reference.Width, _reference.Height, (_reference as IPadding)?.Padding ?? Thickness.Zero);
+            var padding = _excludePadding ? (_reference as IPadding)?.Padding ?? Thickness.Zero : Thickness.Zero;
+            return Available(_reference.Width, _reference.Height, padding);
         }
 
         if (_window is not null)
@@ -197,6 +205,18 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
         width < 0 || height < 0
             ? null
             : new Size(Math.Max(0, width - padding.HorizontalThickness), Math.Max(0, height - padding.VerticalThickness));
+
+    /// <summary>
+    /// Stops following anything and reports no size, so a binding still reading this applies the
+    /// property's default. Used when the relative size is replaced or cleared.
+    /// </summary>
+    internal void Stop()
+    {
+        _element.ParentChanged -= OnTreeChanged;
+        _element.PropertyChanged -= OnElementPropertyChanged;
+        Detach();
+        Value = null;
+    }
 
     private void Reattach()
     {

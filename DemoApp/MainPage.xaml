@@ -44,6 +44,13 @@
                 <Setter Property="LineBreakMode" Value="WordWrap" />
             </Style>
 
+            <!-- Me.Toolkit.Maui.Sizing from a style: an attached property, since {me:Relative}
+                 cannot go in a Setter. -->
+            <Style x:Key="RelativeHeadline" TargetType="Label">
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="me:RelativeSizing.FontSize" Value="4, To=Window, Min=14, Max=48" />
+            </Style>
+
             <Style x:Key="Blurb" TargetType="Label">
                 <Setter Property="FontSize" Value="13" />
                 <Setter Property="LineBreakMode" Value="WordWrap" />
@@ -342,6 +349,51 @@
                                             BindingContext="{x:Reference Oriented}"
                                             Style="{StaticResource Value}"
                                             Text="{Binding Width, StringFormat='measured {0:F0}'}" />
+                                    </VerticalStackLayout>
+                                </Border>
+
+                                <Border Style="{StaticResource Card}">
+                                    <VerticalStackLayout Spacing="6">
+                                        <Label Style="{StaticResource Caption}" Text="16:9 OF ITS OWN WIDTH (TO=SELF)" />
+                                        <BoxView
+                                            x:Name="Video"
+                                            Color="#512BD4"
+                                            HeightRequest="{me:Relative 56.25, To=Self}"
+                                            WidthRequest="{me:Relative 50}"
+                                            HorizontalOptions="Start" />
+                                        <HorizontalStackLayout x:DataType="BoxView" BindingContext="{x:Reference Video}" Spacing="4">
+                                            <Label Style="{StaticResource Value}" Text="{Binding Width, StringFormat='measured {0:F0}'}" />
+                                            <Label Style="{StaticResource Value}" Text="{Binding Height, StringFormat='x {0:F0}'}" />
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
+                                </Border>
+
+                                <Border Style="{StaticResource Card}">
+                                    <VerticalStackLayout Spacing="6">
+                                        <Label Style="{StaticResource Caption}" Text="TWO HALVES LESS A GAP: 50%, OFFSET=-4, SPACING 8" />
+                                        <HorizontalStackLayout Spacing="8">
+                                            <BoxView x:Name="LeftHalf" HeightRequest="20" Color="#2B9E6B" WidthRequest="{me:Relative 50, Offset=-4, AncestorType={x:Type VerticalStackLayout}}" />
+                                            <BoxView HeightRequest="20" Color="#2B9E6B" WidthRequest="{me:Relative 50, Offset=-4, AncestorType={x:Type VerticalStackLayout}}" />
+                                        </HorizontalStackLayout>
+                                        <Label
+                                            x:DataType="BoxView"
+                                            BindingContext="{x:Reference LeftHalf}"
+                                            Style="{StaticResource Value}"
+                                            Text="{Binding Width, StringFormat='each measured {0:F0}'}" />
+                                    </VerticalStackLayout>
+                                </Border>
+
+                                <!-- A Style carrying a relative size: the Setter is shared, each label
+                                     gets its own binding. {me:Relative} cannot go in a Setter. -->
+                                <Border Style="{StaticResource Card}">
+                                    <VerticalStackLayout Spacing="6">
+                                        <Label Style="{StaticResource Caption}" Text="FROM A STYLE: 4% OF THE WINDOW, 14 TO 48" />
+                                        <Label x:Name="Styled" Style="{StaticResource RelativeHeadline}" Text="Styled headline" />
+                                        <Label
+                                            x:DataType="Label"
+                                            BindingContext="{x:Reference Styled}"
+                                            Style="{StaticResource Value}"
+                                            Text="{Binding FontSize, StringFormat='font size {0:F1}'}" />
                                     </VerticalStackLayout>
                                 </Border>
 

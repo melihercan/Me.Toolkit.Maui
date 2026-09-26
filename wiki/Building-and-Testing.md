@@ -131,7 +131,7 @@ the truth. `MultiTargetingTests` asserts the file exists for every slice.
 
 ## The test suite
 
-179 tests in one project, all passing.
+211 tests in one project, all passing.
 
 | File | Covers |
 |---|---|
@@ -140,6 +140,7 @@ the truth. `MultiTargetingTests` asserts the file exists for every slice.
 | `ConfigurationTests` | `Me.Toolkit.Maui.Configuration`'s embedded-resource path: key flattening, the environment overlay, missing-file handling, argument validation. |
 | `HostingTests` | That MAUI's own host environment always says `Production`, and that `Me.Toolkit.Maui.Hosting` changes it by wrapping rather than assigning. |
 | `WebHostTests` | `IMeToolkitMauiWebHost`, by starting a real Kestrel on loopback and making real requests to it. |
+| `RelativeSizingTests` | `To=Self`, `Offset`, `RelativeSize.Parse` and the `RelativeSizing` attached properties, including through a real `Style`. |
 | `SizingTests`, `DisplaySizingTests` | `{me:Relative}` and `SetRelativeSize` on real elements, windows and runtime-loaded XAML: every reference, axis and clamp, re-parenting, leaving a window, and the refusals. The display is a stand-in behind `IDisplaySize`; an inline dispatcher stands in for the UI thread. |
 | `PublicApiSurfaceTests` | The whole public surface against `PublicApi.approved.txt`. |
 | `MultiTargetingTests` | That every library is built for every expected framework, that every platform slice exposes the same surface as the `net10.0` one, and that every slice records its reference paths. |
@@ -206,6 +207,12 @@ checked by breaking the thing it guards:
 | Ignore the element's `Window` changing | 3 failures |
 | Take orientation from the reference instead of the window | 6 failures |
 | Count a square window as landscape | 1 failure |
+| Apply `Offset` after the clamp | 2 failures |
+| Exclude padding for `To=Self` | 1 failure |
+| Clear without stopping the tracker | 3 failures |
+| Parse numbers in the current culture | 1 failure |
+| Leave a replaced tracker running | 1 failure — after a test was added for it |
+| Drop the `To=Self` loop guard | 3 failures |
 
 The suite is then run 30 times in a row against the restored tree, with no flakes.
 

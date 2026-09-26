@@ -60,23 +60,41 @@ assembly Me.Toolkit.Maui.Sizing
     property Microsoft.Maui.Controls.VisualElement Source { get; set; }
     property System.Double Max { get; set; }
     property System.Double Min { get; set; }
+    property System.Double Offset { get; set; }
     property System.Double Percent { get; set; }
     property System.Nullable<System.Double> Landscape { get; set; }
     property System.Nullable<System.Double> Portrait { get; set; }
     property System.Type AncestorType { get; set; }
   type Me.Toolkit.Maui.Sizing.RelativeSize : sealed class
     ctor .ctor(System.Double percent)
+    method static Me.Toolkit.Maui.Sizing.RelativeSize Parse(System.String text)
     property Me.Toolkit.Maui.Sizing.SizeAxis Axis { get; set; }
     property Me.Toolkit.Maui.Sizing.SizeReference To { get; set; }
     property Microsoft.Maui.Controls.VisualElement Source { get; set; }
     property System.Double Max { get; set; }
     property System.Double Min { get; set; }
+    property System.Double Offset { get; set; }
     property System.Double Percent { get; set; }
     property System.Nullable<System.Double> Landscape { get; set; }
     property System.Nullable<System.Double> Portrait { get; set; }
     property System.Type AncestorType { get; set; }
   type Me.Toolkit.Maui.Sizing.RelativeSizeExtensions : static class
+    method static System.Void ClearRelativeSize(Microsoft.Maui.Controls.VisualElement element, Microsoft.Maui.Controls.BindableProperty property)
     method static T SetRelativeSize<T>(T element, Microsoft.Maui.Controls.BindableProperty property, Me.Toolkit.Maui.Sizing.RelativeSize size)
+  type Me.Toolkit.Maui.Sizing.RelativeSizeTypeConverter : sealed class
+    ctor .ctor()
+    method virtual System.Boolean CanConvertFrom(System.ComponentModel.ITypeDescriptorContext context, System.Type sourceType)
+    method virtual System.Object ConvertFrom(System.ComponentModel.ITypeDescriptorContext context, System.Globalization.CultureInfo culture, System.Object value)
+  type Me.Toolkit.Maui.Sizing.RelativeSizing : static class
+    field static Microsoft.Maui.Controls.BindableProperty FontSizeProperty
+    field static Microsoft.Maui.Controls.BindableProperty HeightRequestProperty
+    field static Microsoft.Maui.Controls.BindableProperty WidthRequestProperty
+    method static Me.Toolkit.Maui.Sizing.RelativeSize GetFontSize(Microsoft.Maui.Controls.BindableObject element)
+    method static Me.Toolkit.Maui.Sizing.RelativeSize GetHeightRequest(Microsoft.Maui.Controls.BindableObject element)
+    method static Me.Toolkit.Maui.Sizing.RelativeSize GetWidthRequest(Microsoft.Maui.Controls.BindableObject element)
+    method static System.Void SetFontSize(Microsoft.Maui.Controls.BindableObject element, Me.Toolkit.Maui.Sizing.RelativeSize value)
+    method static System.Void SetHeightRequest(Microsoft.Maui.Controls.BindableObject element, Me.Toolkit.Maui.Sizing.RelativeSize value)
+    method static System.Void SetWidthRequest(Microsoft.Maui.Controls.BindableObject element, Me.Toolkit.Maui.Sizing.RelativeSize value)
   type Me.Toolkit.Maui.Sizing.SizeAxis : enum System.Int32
     Width = 0
     Height = 1
@@ -86,6 +104,7 @@ assembly Me.Toolkit.Maui.Sizing
     Parent = 0
     Window = 1
     Display = 2
+    Self = 3
 
 assembly Me.Toolkit.Maui.WebHostPatch
   type Me.Toolkit.Maui.WebHostPatch.IMeToolkitMauiWebHost : interface

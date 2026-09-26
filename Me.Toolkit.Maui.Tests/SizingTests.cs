@@ -20,6 +20,7 @@ namespace Me.Toolkit.Maui.Tests;
 /// Sizes are driven the way a platform drives them: <see cref="IView.Arrange"/> for an element and
 /// <see cref="IWindow.FrameChanged"/> for a window.
 /// </summary>
+[Collection(XamlLoaderCollection.Name)]
 public class SizingTests
 {
     public SizingTests() => InlineDispatcher.Install();
@@ -396,6 +397,10 @@ public class SizingTests
         { "null size", () => new Label().SetRelativeSize(Label.FontSizeProperty, null!) },
         { "negative Portrait", () => _ = new RelativeSize(1) { Portrait = -1 } },
         { "infinite Landscape", () => _ = new RelativeSize(1) { Landscape = double.PositiveInfinity } },
+        { "infinite Offset", () => _ = new RelativeSize(1) { Offset = double.NegativeInfinity } },
+        { "Self width from its own width", () => new BoxView().SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(1) { To = SizeReference.Self }) },
+        { "Self height from its own height", () => new BoxView().SetRelativeSize(VisualElement.HeightRequestProperty, new RelativeSize(1) { To = SizeReference.Self, Axis = SizeAxis.Height }) },
+        { "Self height from its shorter side", () => new BoxView().SetRelativeSize(VisualElement.HeightRequestProperty, new RelativeSize(1) { To = SizeReference.Self, Axis = SizeAxis.Shorter }) },
     };
 
     private const string Namespaces =
@@ -528,6 +533,25 @@ public sealed class DisplaySizingTests : IDisposable
         _display.Rotate();
 
         label.FontSize.Should().Be(40);
+    }
+
+    [Fact]
+    public void Replacing_or_clearing_a_relative_size_stops_the_old_one_listening()
+    {
+        // Behaviour alone cannot show this — the old binding is gone, so an old tracker still
+        // running changes nothing visible. It was found by removing the Stop and watching every
+        // other test stay green. The display's listener count is where a leftover tracker shows.
+        var label = new Label();
+        _ = InWindow(new Grid { label });
+        label.SetRelativeSize(Label.FontSizeProperty, new RelativeSize(5) { To = SizeReference.Display });
+        _display.Listeners.Should().Be(1);
+
+        label.SetRelativeSize(Label.FontSizeProperty, new RelativeSize(5));
+        _display.Listeners.Should().Be(0, "replaced by a parent-relative size");
+
+        label.SetRelativeSize(Label.FontSizeProperty, new RelativeSize(5) { To = SizeReference.Display });
+        label.ClearRelativeSize(Label.FontSizeProperty);
+        _display.Listeners.Should().Be(0, "cleared");
     }
 
     [Fact]
