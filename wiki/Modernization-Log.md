@@ -691,7 +691,8 @@ The display row is the one only a device could settle: 58 in both orientations i
 1080 px ÷ 2.8125, so the pixel-to-device-independent conversion holds on Android, and `Shorter`
 does not change on rotation. `OnIdiom` picked the phone value on a real phone.
 
-Not checked there: rotating back to portrait (the desktop run covered both directions), and iOS.
+Rotated back to portrait, every value returned exactly — 290, 258, 161 × 91, 157 — in the same
+process. Not checked: iOS.
 
 ## Settled, and not to be reopened
 
