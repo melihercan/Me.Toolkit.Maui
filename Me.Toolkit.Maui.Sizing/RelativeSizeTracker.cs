@@ -118,7 +118,7 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
         // Orientation is the window's shape, whatever the size is measured against, so a Portrait
         // or Landscape override listens to the window as well as to the reference. The element's
         // Window property changing already re-attaches, which covers arriving in a window.
-        if (_size.DependsOnOrientation)
+        if (_size.DependsOnWindow)
         {
             _orientationWindow = _element.Window;
             if (_orientationWindow is not null)
@@ -181,8 +181,13 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
 
     private void Update() =>
         Value = ReferenceSize() is { } size
-            ? _size.Resolve(size, _orientationWindow is { } w ? Available(w.Width, w.Height, Thickness.Zero) : null)
+            ? _size.Resolve(size, _orientationWindow is { } w ? WindowSize(w) : null)
             : null;
+
+    // Window.Width and Height are in the platform's points, which on Mac Catalyst are not layout
+    // units; see LayoutUnits. -1 until the platform has sized the window.
+    private static Size? WindowSize(Window window) =>
+        window.Width < 0 || window.Height < 0 ? null : LayoutUnits.ToLayoutUnits(window.Width, window.Height);
 
     private Size? ReferenceSize()
     {
@@ -194,10 +199,13 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
 
         if (_window is not null)
         {
-            return Available(_window.Width, _window.Height, Thickness.Zero);
+            return WindowSize(_window);
         }
 
-        return _display ? DisplaySize.Current.Current : null;
+        // The display, like the window, is reported in the platform's points; see LayoutUnits.
+        return _display && DisplaySize.Current.Current is { } display
+            ? LayoutUnits.ToLayoutUnits(display.Width, display.Height)
+            : null;
     }
 
     // Width and Height are -1 until the first layout; that is "no size yet", not a size.

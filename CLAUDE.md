@@ -159,6 +159,12 @@ display, an `x:Reference` or an `AncestorType`.
 - **Verified on an Android 16 phone**, portrait to landscape, by `adb` screenshots of the demo's
   measured-value labels. Deploy with `-t:Install` and check `files/.__override__` first. iOS is
   unrun.
+- **Window and display sizes go through `LayoutUnits`**: on Mac Catalyst with the iPad idiom (MAUI's
+  default) they are Mac points while layout is in iPad points, 1/0.77 as many. Measuring the root page
+  instead was tried and fails - a `Shell` root reports no size.
+- **`Breakpoints` is a string** (`'600:50 1200:33'`, space-separated, window width in layout units) and
+  is refused alongside `Portrait`/`Landscape`. `Thickness` targets (`Margin`, `Padding`) get the value
+  on every side through a second `TypedBinding`.
 - **Its tests are behavioural** and need `InlineDispatcher.Install()`: without a dispatcher, every
   binding update after the first throws.
 

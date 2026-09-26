@@ -11,7 +11,10 @@ public static class RelativeSizeExtensions
     /// </summary>
     /// <typeparam name="T">The element's type, returned so calls can be chained.</typeparam>
     /// <param name="element">The element to size.</param>
-    /// <param name="property">A <see cref="double"/> property, such as <c>WidthRequest</c> or <c>FontSize</c>.</param>
+    /// <param name="property">
+    /// A <see cref="double"/> property, such as <c>WidthRequest</c> or <c>FontSize</c>, or a
+    /// <see cref="Thickness"/> one, <c>Margin</c> or <c>Padding</c>, which gets the value on every side.
+    /// </param>
     /// <param name="size">The relative size.</param>
     /// <returns>The same element.</returns>
     /// <remarks>
@@ -75,11 +78,11 @@ public static class RelativeSizeExtensions
     {
         size.Validate();
 
-        if (property.ReturnType != typeof(double))
+        if (property.ReturnType != typeof(double) && property.ReturnType != typeof(Thickness))
         {
             throw new ArgumentException(
                 $"{property.DeclaringType.Name}.{property.PropertyName} is a {property.ReturnType.Name}; "
-                + "a relative size can only be applied to a double property.",
+                + "a relative size can only be applied to a double or Thickness property.",
                 nameof(property));
         }
 
@@ -109,10 +112,27 @@ public static class RelativeSizeExtensions
         // tracker as its source and the element holds the binding, so the tracker lives exactly as
         // long as the binding does. With no reference size the getter reports failure, and the
         // property falls back to its default.
+        Tuple<Func<RelativeSizeTracker, object>, string>[] handlers =
+            [Tuple.Create<Func<RelativeSizeTracker, object>, string>(static t => t, nameof(RelativeSizeTracker.Value))];
+
+        // A Thickness gets the same value on every side: a margin or padding that scales with the
+        // window. Two bindings rather than a conversion, so each stays typed and trim-safe.
+        if (property.ReturnType == typeof(Thickness))
+        {
+            return new TypedBinding<RelativeSizeTracker, Thickness>(
+                static t => t.Value is { } value ? (new Thickness(value), true) : (default, false),
+                setter: null,
+                handlers)
+            {
+                Source = tracker,
+                Mode = BindingMode.OneWay,
+            };
+        }
+
         return new TypedBinding<RelativeSizeTracker, double>(
             static t => t.Value is { } value ? (value, true) : (default, false),
             setter: null,
-            handlers: [Tuple.Create<Func<RelativeSizeTracker, object>, string>(static t => t, nameof(RelativeSizeTracker.Value))])
+            handlers)
         {
             Source = tracker,
             Mode = BindingMode.OneWay,

@@ -40,9 +40,26 @@ public class SizingTests
     private static Window InWindow(View content, double width, double height)
     {
         var window = new Window(new ContentPage { Content = content });
-        ((IWindow)window).FrameChanged(new Rect(0, 0, width, height));
+        Resize(window, width, height);
 
         return window;
+    }
+
+    /// <summary>
+    /// What a platform does when a window is resized: the window's frame changes and its root page
+    /// is laid out to fill it. A window reference measures that page, so both are needed here.
+    /// </summary>
+    private static void Resize(Window window, double width, double height) =>
+        Resize(window, width, height, width, height);
+
+    private static void Resize(Window window, double width, double height, double pageWidth, double pageHeight)
+    {
+        ((IWindow)window).FrameChanged(new Rect(0, 0, width, height));
+
+        if (window.Page is { } page)
+        {
+            Arrange(page, pageWidth, pageHeight);
+        }
     }
 
     [Fact]
@@ -197,7 +214,7 @@ public class SizingTests
         var window = InWindow(new Grid { label }, 1000, 800);
         label.SetRelativeSize(Label.FontSizeProperty, new RelativeSize(2) { To = SizeReference.Window });
 
-        ((IWindow)window).FrameChanged(new Rect(0, 0, 500, 800));
+        Resize(window, 500, 800);
 
         label.FontSize.Should().Be(10);
     }
@@ -227,7 +244,7 @@ public class SizingTests
         var page = (ContentPage)window.Page!;
 
         page.Content = null;
-        ((IWindow)window).FrameChanged(new Rect(0, 0, 3000, 800));
+        Resize(window, 3000, 800);
 
         label.FontSize.Should().NotBe(60);
     }
@@ -252,10 +269,10 @@ public class SizingTests
 
         child.WidthRequest.Should().Be(270, "a portrait window, even though the parent is landscape-shaped");
 
-        ((IWindow)window).FrameChanged(new Rect(0, 0, 800, 400));
+        Resize(window, 800, 400);
         child.WidthRequest.Should().Be(135, "rotated to landscape");
 
-        ((IWindow)window).FrameChanged(new Rect(0, 0, 400, 800));
+        Resize(window, 400, 800);
         child.WidthRequest.Should().Be(270, "and back");
     }
 
@@ -298,7 +315,7 @@ public class SizingTests
         child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(50) { Portrait = 90, Landscape = 45 });
 
         ((ContentPage)window.Page!).Content = null;
-        ((IWindow)window).FrameChanged(new Rect(0, 0, 800, 400));
+        Resize(window, 800, 400);
 
         child.WidthRequest.Should().Be(150, "out of the window, Percent applies and the window is no longer observed");
     }
@@ -456,7 +473,7 @@ public class SizingTests
         grid.FindByName<BoxView>("Both").WidthRequest.Should().Be(900);
         grid.FindByName<BoxView>("One").WidthRequest.Should().Be(500);
 
-        ((IWindow)window).FrameChanged(new Rect(0, 0, 800, 400));
+        Resize(window, 800, 400);
 
         grid.FindByName<BoxView>("Both").WidthRequest.Should().Be(450);
         grid.FindByName<BoxView>("One").WidthRequest.Should().Be(200);
@@ -500,10 +517,39 @@ public class SizingTests
 /// the process-wide <see cref="DisplaySize.Current"/>; xUnit runs one class's tests in sequence, and
 /// no other class touches it.
 /// </summary>
+[Collection(XamlLoaderCollection.Name)]
 public sealed class DisplaySizingTests : IDisposable
 {
     private readonly IDisplaySize _original = DisplaySize.Current;
     private readonly FakeDisplay _display = new() { Current = new Size(400, 800) };
+
+    [Fact]
+    public void On_Mac_Catalyst_window_and_display_points_are_converted_to_layout_units()
+    {
+        // Mac Catalyst, iPad idiom, as run on a Mac mini: the window reported 1024 wide while its
+        // page was laid out 1330 wide, so 3% of the window came out 30.7 where 3% of the layout's
+        // width is 39.9, and the display was short by the same factor.
+        var original = LayoutUnits.PointsPerUnit;
+        try
+        {
+            LayoutUnits.PointsPerUnit = 0.77;
+            _display.Current = new Size(1920, 1080);
+
+            var label = new Label();
+            var window = new Window(new ContentPage { Content = new Grid { label } });
+            ((IWindow)window).FrameChanged(new Rect(0, 0, 1024, 768));
+
+            label.SetRelativeSize(Label.FontSizeProperty, new RelativeSize(3) { To = SizeReference.Window });
+            label.FontSize.Should().BeApproximately(1024 / 0.77 * 0.03, 1e-9);
+
+            label.SetRelativeSize(Label.FontSizeProperty, new RelativeSize(15) { To = SizeReference.Display, Axis = SizeAxis.Shorter });
+            label.FontSize.Should().BeApproximately(1080 / 0.77 * 0.15, 1e-9, "the demo read 162 before the fix");
+        }
+        finally
+        {
+            LayoutUnits.PointsPerUnit = original;
+        }
+    }
 
     public DisplaySizingTests()
     {

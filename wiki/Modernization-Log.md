@@ -716,6 +716,42 @@ served packages were unzipped again, every assembly reading `26.9.27.0`.
 The release notes first said 26.9.26 "is unlisted", and were corrected before tagging: unlisting is
 done by hand, later, and the notes are baked into the package for good.
 
+## Phase 12 — a Mac, an iPhone, and what they found
+
+The demo app's 18 compiled-binding warnings (`MAUIG2045`) had one cause: each tab set its
+`BindingContext` to a child view model while its bindings were checked against `MainViewModel`.
+Declaring the child's type on the tab's root fixed all of them; the generated code confirmed the
+`BindingContext` binding itself still compiles against the parent. The tabs now bind without
+reflection, and the demo builds with no warnings on Windows and Mac Catalyst.
+
+**Mac Catalyst and iOS ran for the first time** — on a Mac mini with macOS 15.8 and Xcode 26.3, and
+an iPhone XR on iOS 18.7. On Mac Catalyst the whole demo came up: Configuration read its
+`appsettings.json` from the app package, a path never run anywhere else, and Hosting reported
+Development. Values were read through the macOS accessibility tree, since an SSH session cannot
+capture other apps' windows without a Screen Recording grant.
+
+It found a real bug in Sizing: window- and display-relative sizes were 23% small, because Mac
+Catalyst shows an iPad-idiom app scaled to 77% and reports the window and display in Mac points. The
+first fix — measure the root page instead — sent every window-relative size to zero, because the
+demo's root is a `Shell`, which reports no size; the tests had used a `ContentPage` and passed. The
+second converts with Apple's 0.77. Verified on the Mac in a landscape and a portrait window: 3% of a
+1024-wide window read 30.7 before and 39.9-equivalent after (clamped at 40), 23.4 at 600 wide, the
+display 162 before and 210 after.
+
+On the iPhone, signing needed the Mac's login keychain, which an SSH session holds locked; the
+owner ran a script that unlocks it and builds in one session, so no password passed through the
+automation. The NFC entitlement was left out of that build, because a wildcard development profile
+cannot grant it. Every Sizing card matched its expected value in portrait and in landscape, as read
+off the phone by its owner — iOS 17 and later need a root-owned developer tunnel to screenshot
+remotely.
+
+Then three additions: `Breakpoints` choosing the percentage by window width, `Round`, and relative
+`Margin` and `Padding`. On Windows the breakpoint bar read 90%, 60% and 35% across the three ranges.
+`Round` was found to give whole units but not whole pixels: at 150% scaling a requested 469
+rendered as 469.333, which is 704 pixels, and rounding near 100% can overshoot the parent by half a
+unit. The documentation says so rather than promising sharper rendering. How a relative font
+combines with the system's text size is documented from MAUI's behaviour, not measured.
+
 ## Settled, and not to be reopened
 
 - **`26.9.8` is the version.** Date-based, matching Blazorme and Utilme. Publishing it closes the
@@ -732,7 +768,7 @@ done by hand, later, and the notes are baked into the package for good.
 
 Closed since this list was first written: the Trusted Publishing policy exists and has published
 every release since `26.9.9`; `Me.Toolkit.Maui.Sizing` was added and published; the wiki publishes
-itself from `wiki/`.
+itself from `wiki/`; the demo has run on Mac Catalyst and an iPhone.
 
 - **The `Me.Toolkit.Maui.*` prefix reservation.** Not yet requested; it is an email from the owner to
   nuget.org. See [Publishing](Publishing#reserving-the-prefix).
@@ -742,7 +778,6 @@ itself from `wiki/`.
 - **`Me.Toolkit.Maui.Nfc`.** Unfinished, unpublished, and never exercised against a physical tag. The
   Android foreground-dispatch path and the CoreNFC session have no behavioural coverage; the demo's
   NFC tab renders but has not been used to read anything.
-- **iOS and Mac Catalyst at runtime.** The library slices compile on Windows CI, but no app has been
-  built, signed or run on either — `Me.Toolkit.Maui.Sizing` included, which has run on Windows and an
-  Android phone only. `Me.Toolkit.Maui.WebHostPatch`'s note that iOS stops a backgrounded server
-  is inherited from the Xamarin era and unverified here.
+- **iOS and Mac Catalyst beyond the demo.** The demo has now run on both, but only Configuration,
+  Hosting and Sizing were exercised there; `Me.Toolkit.Maui.WebHostPatch` has not served a request on
+  either, and its note that iOS stops a backgrounded server is inherited from the Xamarin era.

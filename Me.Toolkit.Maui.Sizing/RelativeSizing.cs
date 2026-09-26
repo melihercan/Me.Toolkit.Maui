@@ -34,6 +34,17 @@ public static class RelativeSizing
     public static readonly BindableProperty HeightRequestProperty =
         Create("HeightRequest", _ => VisualElement.HeightRequestProperty);
 
+    /// <summary>A relative <see cref="View.Margin"/>, the same on every side.</summary>
+    public static readonly BindableProperty MarginProperty =
+        Create("Margin", _ => View.MarginProperty);
+
+    /// <summary>
+    /// A relative <c>Padding</c>, the same on every side, whichever element declares it - a layout,
+    /// a <see cref="Border"/>, a <see cref="ContentView"/>, a page.
+    /// </summary>
+    public static readonly BindableProperty PaddingProperty =
+        Create("Padding", element => StaticPropertyOf(element, "PaddingProperty", "Padding"));
+
     /// <summary>
     /// A relative size for the element's <c>FontSize</c>, whichever control declares it —
     /// <see cref="Label"/>, <see cref="Button"/>, <see cref="Entry"/> or a third-party control with a
@@ -61,6 +72,26 @@ public static class RelativeSizing
     /// <param name="element">The element.</param>
     /// <param name="value">The relative size, or <see langword="null"/> to remove it.</param>
     public static void SetHeightRequest(BindableObject element, RelativeSize? value) => Set(element, HeightRequestProperty, value);
+
+    /// <summary>Gets the relative margin.</summary>
+    /// <param name="element">The element.</param>
+    /// <returns>The relative size, or <see langword="null"/> if none is set.</returns>
+    public static RelativeSize? GetMargin(BindableObject element) => Get(element, MarginProperty);
+
+    /// <summary>Sets the relative margin.</summary>
+    /// <param name="element">The element.</param>
+    /// <param name="value">The relative size, or <see langword="null"/> to remove it.</param>
+    public static void SetMargin(BindableObject element, RelativeSize? value) => Set(element, MarginProperty, value);
+
+    /// <summary>Gets the relative padding.</summary>
+    /// <param name="element">The element.</param>
+    /// <returns>The relative size, or <see langword="null"/> if none is set.</returns>
+    public static RelativeSize? GetPadding(BindableObject element) => Get(element, PaddingProperty);
+
+    /// <summary>Sets the relative padding.</summary>
+    /// <param name="element">The element.</param>
+    /// <param name="value">The relative size, or <see langword="null"/> to remove it.</param>
+    public static void SetPadding(BindableObject element, RelativeSize? value) => Set(element, PaddingProperty, value);
 
     /// <summary>Gets the relative font size.</summary>
     /// <param name="element">The element.</param>
@@ -115,8 +146,11 @@ public static class RelativeSizing
     // Label, Button, Entry, Editor, SearchBar and the pickers all share one FontSizeProperty, but a
     // third-party control may declare its own, so the element's type is asked rather than assumed.
     private static BindableProperty FontSizeOf(VisualElement element) =>
-        element.GetType().GetField("FontSizeProperty", BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+        StaticPropertyOf(element, "FontSizeProperty", "FontSize");
+
+    private static BindableProperty StaticPropertyOf(VisualElement element, string field, string name) =>
+        element.GetType().GetField(field, BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
             ?.GetValue(null) as BindableProperty
         ?? throw new NotSupportedException(
-            $"{element.GetType().Name} has no FontSize property for RelativeSizing.FontSize to set.");
+            $"{element.GetType().Name} has no {name} property for RelativeSizing.{name} to set.");
 }

@@ -24,7 +24,7 @@ between IDs.
 | [`Me.Toolkit.Maui.Configuration`](https://www.nuget.org/packages/Me.Toolkit.Maui.Configuration) | [`Xamarinme.Configuration`](https://www.nuget.org/packages/Xamarinme.Configuration) 1.0.2 | **Published** 26.9.27 |
 | [`Me.Toolkit.Maui.Hosting`](https://www.nuget.org/packages/Me.Toolkit.Maui.Hosting) | [`Xamarinme.Hosting`](https://www.nuget.org/packages/Xamarinme.Hosting) 1.0.3 | **Published** 26.9.27 |
 | [`Me.Toolkit.Maui.WebHostPatch`](https://www.nuget.org/packages/Me.Toolkit.Maui.WebHostPatch) | [`Xamarinme.WebHostPatch`](https://www.nuget.org/packages/Xamarinme.WebHostPatch) 1.0.0 | **Published** 26.9.27 — no patch needed on .NET 10 |
-| [`Me.Toolkit.Maui.Sizing`](https://www.nuget.org/packages/Me.Toolkit.Maui.Sizing) | nothing — new, not a port | **Published** 26.9.27 — relative sizes (`{me:Relative 30}`), verified rotating on an Android phone |
+| [`Me.Toolkit.Maui.Sizing`](https://www.nuget.org/packages/Me.Toolkit.Maui.Sizing) | nothing — new, not a port | **Published** 26.9.27 — relative sizes (`{me:Relative 30}`), verified on Windows, Android, Mac Catalyst and iOS |
 
 The repository was called Mauime. It is not, because nuget.org rejects any package ID beginning with
 `Maui` as reserved — see [Publishing](Publishing) for what that took to establish.

@@ -27,17 +27,20 @@ relative one.
     <BoxView WidthRequest="{me:Relative 50, AncestorType={x:Type Border}}" />
 ```
 
-No registration is needed. It works on any `double` property: `WidthRequest`, `HeightRequest`,
-`FontSize`, `Spacing`, `MaximumWidthRequest` and so on.
+No registration is needed. It works on any `double` property — `WidthRequest`, `HeightRequest`,
+`FontSize`, `Spacing`, `MaximumWidthRequest` and so on — and on `Margin` and `Padding`, which get the
+value on every side: `Padding="{me:Relative 2, To=Window, Min=8, Max=24}"`.
 
 | Option | Values | Default |
 |---|---|---|
 | `Percent` (first argument) | `30` is 30% | — |
 | `Portrait`, `Landscape` | a different percentage per window orientation | `Percent` |
+| `Breakpoints` | percentages by window width: `'600:50 1200:33'` | none |
 | `To` | `Parent`, `Window`, `Display`, `Self` | `Parent` |
 | `Offset` | added after the percentage, may be negative | 0 |
 | `Axis` | `Width`, `Height`, `Shorter`, `Longer` | `Width` |
 | `Min`, `Max` | clamp the result | 0, no limit |
+| `Round` | whole units, before the clamp | `False` |
 | `Source` | an element, usually `{x:Reference}` | — |
 | `AncestorType` | the nearest ancestor of this type | — |
 
@@ -71,6 +74,28 @@ It must read the other dimension than the one it sets — `HeightRequest` from `
 </HorizontalStackLayout>
 ```
 
+## Breakpoints
+
+Like CSS media queries, `Breakpoints` choose the percentage by the window's width:
+
+```xml
+<!-- full width on a phone, two columns from 600, three from 1200 -->
+<Border WidthRequest="{me:Relative 100, Breakpoints='600:50 1200:33', Offset=-8}" />
+```
+
+Pairs are `width:percent`, separated by spaces, in any order. Below the smallest width, `Percent`
+applies; widths are the window's, in layout units, so they mean the same on every platform. They
+follow the window as it is resized. `Breakpoints` cannot be combined with `Portrait`/`Landscape` —
+both choose the percentage, and rather than pick a winner it is refused.
+
+## Rounding
+
+`Round=True` rounds to whole units, before `Min`/`Max` so it never escapes them. It gives tidy
+values and sizes that step rather than creep during a resize. It does not give whole physical
+pixels: the platform snaps to those itself, so on a 150% display an odd value still lands between
+two — 469 rendered as 469.333 on Windows, which is 704 pixels. Rounding a value close to 100% of its
+parent can also round up past the space available, by up to half a unit, which layout then trims.
+
 ## In styles
 
 `{me:Relative}` cannot go in a `Style` setter — a setter is shared, and a relative size is tracked
@@ -86,9 +111,11 @@ The value is text with the same option names as `{me:Relative}`: an optional lea
 then `Name=Value` pairs. Numbers are read the same way in every culture. `Source` and `AncestorType`
 cannot be written as text, since text cannot name an element or a type.
 
-`RelativeSizing.WidthRequest`, `HeightRequest` and `FontSize` are available, and work directly on an
-element too: `<BoxView me:RelativeSizing.WidthRequest="25, Offset=10" />`. `FontSize` finds the
-property of whichever control it is on, including third-party ones with a `FontSizeProperty`.
+`RelativeSizing.WidthRequest`, `HeightRequest`, `FontSize`, `Margin` and `Padding` are available,
+and work directly on an element too: `<BoxView me:RelativeSizing.WidthRequest="25, Offset=10" />`.
+`FontSize` and `Padding` find the property of whichever element they are on, including third-party
+controls with a `FontSizeProperty` or `PaddingProperty`. `Breakpoints=600:50 1200:33` and
+`Round=True` are written the same way.
 Removing the style removes the size, and the property goes back to its default.
 
 From code, `element.ClearRelativeSize(property)` does the same. Prefer it to `RemoveBinding`: MAUI
@@ -141,6 +168,11 @@ Two other spellings look reasonable and do not work, both because of how MAUI co
 - **Display** is the main display in device-independent units, and changes on rotation. On a
   desktop with several monitors it is the main one, not necessarily the one the window is on.
 
+Both are converted to the units pages are laid out in. That matters on **Mac Catalyst**, where an
+app with the iPad idiom — MAUI's template default — is shown scaled to 77%: the window and display
+are reported in Mac points while layout uses iPad points, 1.3 times as many. Without the conversion
+every window- and display-relative size came out 23% small on a Mac.
+
 Until the reference has a size — before the first layout, or before the element is in a window —
 the property keeps its default. If the element moves to another parent or window, it follows.
 Setting the property directly replaces the relative size, as it would any binding.
@@ -157,6 +189,17 @@ Setting the property directly replaces the relative size, as it would any bindin
   only while it is in a window and unsubscribes when it leaves.
 - **Trim-safe.** The binding is a `TypedBinding`, not a string path, so iOS and Android Release
   builds do not trim away what it reads.
+- **Accessibility text size multiplies a relative font.** MAUI scales `FontSize` by the user's
+  system text-size setting (`FontAutoScalingEnabled`, on by default), after this library has set it.
+  So `Min` and `Max` bound the `FontSize` property, not the rendered text: with `Max=40` and the text
+  size at 130%, text renders at 52. That is usually right — the user asked for bigger text. To cap
+  what renders, set `FontAutoScalingEnabled="False"`, and then honour the setting some other way.
+  This is how MAUI documents the setting; it has not been measured on a device here.
+
+## Where it has run
+
+Windows, resized; an Android 16 phone, rotated; Mac Catalyst on macOS 15, resized; an iPhone XR on
+iOS 18, rotated — every card of the repository's demo checked against its expected value.
 
 ## Documentation
 

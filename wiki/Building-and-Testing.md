@@ -132,7 +132,7 @@ the truth. `MultiTargetingTests` asserts the file exists for every slice.
 
 ## The test suite
 
-211 tests in one project, all passing.
+238 tests in one project, all passing.
 
 | File | Covers |
 |---|---|
@@ -214,6 +214,11 @@ checked by breaking the thing it guards:
 | Parse numbers in the current culture | 1 failure |
 | Leave a replaced tracker running | 1 failure — after a test was added for it |
 | Drop the `To=Self` loop guard | 3 failures |
+| Measure `Window.Width` unconverted on Mac Catalyst | 1 failure |
+| Ignore `Breakpoints` | 6 failures |
+| Round after the clamp | 1 failure |
+| Stop breakpoints listening to the window | 6 failures |
+| Allow `Breakpoints` with `Portrait`/`Landscape` | 2 failures |
 
 The suite is then run 30 times in a row against the restored tree, with no flakes.
 
@@ -295,8 +300,16 @@ Two things about it are worth knowing before touching it:
   operators rather than Rx.NET: version 24 dropped `System.Reactive` and reimplemented them, and the
   two sets collide on every `Select`, `Merge` and `Subscribe`.
 
-Building it is not running it. The Windows head has been launched and watched to start cleanly; the
-Android, iOS and Mac Catalyst heads are compile-verified only.
+Building it is not running it. All four heads have been run: Windows, an Android phone, Mac Catalyst
+on a Mac, and an iPhone. It builds with no warnings - each tab declares its view model's type with
+`x:DataType` on the element that sets its `BindingContext`.
+
+On a Mac reached over SSH, an iPhone build needs the login keychain unlocked **in the same session**
+as the signing - `security unlock-keychain` in one SSH session does not unlock another - and the
+demo's NFC entitlement cannot be signed with a wildcard development profile, so a test build passes
+`-p:CodesignEntitlements` pointing at an empty entitlements file. Mac Catalyst windows cannot be
+screenshotted from SSH without a Screen Recording grant; their text can be read through the
+accessibility tree with `osascript` instead.
 
 ## CI
 

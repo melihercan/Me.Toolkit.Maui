@@ -295,6 +295,24 @@ refused.
 live and matched its expected value; see the [Modernization Log](Modernization-Log). iOS has not
 been run.
 
+**Window and display sizes are converted to layout units**, which only differ on Mac Catalyst. An
+app with the iPad idiom — MAUI's template default — is shown there scaled to 77%, and `Window.Width`
+and `DeviceDisplay` report Mac points while pages are laid out in iPad points. Found by running the
+demo on a Mac: a window reporting 1024 wide held a parent measuring 1267. The first fix measured the
+window's root page instead, which is in layout units by definition — and every window-relative size
+in the demo went to zero, because its root is a `Shell`, which reports no size. The conversion uses
+Apple's fixed 0.77 for the iPad idiom and 1 for the Mac idiom; `LayoutUnits` holds it, settable so a
+net10.0 test can reproduce the Mac.
+
+**Breakpoints are a string, `'600:50 1200:33'`**, because the markup extension, the attached
+properties' text form and code all need to write them, and a list type would not survive the first
+two. Space-separated because the text form is already comma-separated. They key on window width in
+layout units, like CSS media queries on the viewport, and are refused alongside `Portrait` and
+`Landscape`, which would choose the percentage too.
+
+**A `Thickness` target gets the value on every side** — relative margins and padding — through a
+second typed binding rather than a converter, so it stays trim-safe.
+
 **Unlike `Me.Toolkit.Maui.Nfc`, it has real behavioural coverage.** Elements, windows, bindings and
 the runtime XAML loader all run on the net10.0 slice of Controls, so the tests arrange real
 elements with `IView.Arrange`, resize real windows with `IWindow.FrameChanged`, and load real XAML.

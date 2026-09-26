@@ -23,6 +23,8 @@ public sealed class RelativeSize
     private readonly double _offset;
     private readonly double _min;
     private readonly double _max = double.PositiveInfinity;
+    private readonly string? _breakpoints;
+    private readonly (double MinWidth, double Percent)[] _breakpointList = [];
 
     /// <summary>Creates a relative size.</summary>
     /// <param name="percent">The percentage of the reference, so <c>30</c> is 30%.</param>
@@ -79,6 +81,38 @@ public sealed class RelativeSize
     }
 
     /// <summary>
+    /// Percentages by window width, like CSS media queries: <c>600:50 1200:33</c> is
+    /// <see cref="Percent"/> below 600, 50 from 600 and 33 from 1200. Widths are the window's, in
+    /// layout units; pairs are separated by spaces. <see langword="null"/>, the default, means none.
+    /// </summary>
+    /// <remarks>
+    /// Cannot be combined with <see cref="Portrait"/> or <see cref="Landscape"/>, which would compete
+    /// to choose the percentage. Until the element is in a window, <see cref="Percent"/> applies.
+    /// </remarks>
+    public string? Breakpoints
+    {
+        get => _breakpoints;
+        init
+        {
+            _breakpointList = string.IsNullOrWhiteSpace(value) ? [] : ParseBreakpoints(value);
+            _breakpoints = _breakpointList.Length == 0 ? null : value;
+        }
+    }
+
+    /// <summary>
+    /// Rounds the result to a whole number of units, before <see cref="Min"/> and <see cref="Max"/>
+    /// are applied so it never escapes them: tidy values, and a size that steps rather than creeps
+    /// by fractions during a resize. Defaults to <see langword="false"/>.
+    /// </summary>
+    /// <remarks>
+    /// Whole units are not whole physical pixels. The platform snaps to those itself, so on a 150%
+    /// display an odd value still lands between two: 469 units rendered as 469.333 on Windows,
+    /// which is 704 pixels. And rounding a value near 100% of its parent can round up past the space
+    /// available, by up to half a unit, which layout then trims.
+    /// </remarks>
+    public bool Round { get; init; }
+
+    /// <summary>
     /// What the size is a percentage of. Defaults to <see cref="SizeReference.Parent"/>. Leave it
     /// at the default when <see cref="Source"/> or <see cref="AncestorType"/> is set.
     /// </summary>
@@ -119,8 +153,11 @@ public sealed class RelativeSize
     /// </summary>
     public Type? AncestorType { get; init; }
 
-    /// <summary>Whether the result depends on the window's orientation.</summary>
-    internal bool DependsOnOrientation => Portrait is not null || Landscape is not null;
+    /// <summary>
+    /// Whether the percentage is chosen by the window — its orientation or its width — whatever the
+    /// size is measured against.
+    /// </summary>
+    internal bool DependsOnWindow => Portrait is not null || Landscape is not null || _breakpointList.Length > 0;
 
     /// <summary>
     /// Reads the text form used by <see cref="RelativeSizing"/>'s attached properties: an optional
@@ -141,6 +178,8 @@ public sealed class RelativeSize
         double? percent = null, portrait = null, landscape = null, offset = null, min = null, max = null;
         SizeReference? to = null;
         SizeAxis? axis = null;
+        string? breakpoints = null;
+        var round = false;
 
         var parts = text.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
@@ -170,27 +209,44 @@ public sealed class RelativeSize
                 case "max": max = Number(name, value); break;
                 case "to": to = Enumeration<SizeReference>(name, value); break;
                 case "axis": axis = Enumeration<SizeAxis>(name, value); break;
+                case "breakpoints": breakpoints = value; break;
+                case "round":
+                    round = bool.TryParse(value, out var r)
+                        ? r
+                        : throw new FormatException($"{name}={value} is not True or False.");
+                    break;
                 default:
                     throw new FormatException(
-                        $"Unknown option '{name}' in \"{text}\". Expected Percent, Portrait, Landscape, Offset, To, Axis, Min or Max.");
+                        $"Unknown option '{name}' in \"{text}\". Expected Percent, Portrait, Landscape, Breakpoints, Offset, Round, To, Axis, Min or Max.");
             }
         }
 
-        if (percent is null && portrait is null && landscape is null)
+        if (percent is null && portrait is null && landscape is null && breakpoints is null)
         {
             throw new FormatException($"\"{text}\" gives no percentage.");
         }
 
-        return new RelativeSize(percent ?? 0)
+        try
         {
-            Portrait = portrait,
-            Landscape = landscape,
-            Offset = offset ?? 0,
-            To = to ?? SizeReference.Parent,
-            Axis = axis ?? SizeAxis.Width,
-            Min = min ?? 0,
-            Max = max ?? double.PositiveInfinity,
-        };
+            return new RelativeSize(percent ?? 0)
+            {
+                Breakpoints = breakpoints,
+                Round = round,
+                Portrait = portrait,
+                Landscape = landscape,
+                Offset = offset ?? 0,
+                To = to ?? SizeReference.Parent,
+                Axis = axis ?? SizeAxis.Width,
+                Min = min ?? 0,
+                Max = max ?? double.PositiveInfinity,
+            };
+        }
+        catch (ArgumentException e)
+        {
+            // A value that parsed as a number but is out of range - a negative percent, a
+            // malformed breakpoint - is still a problem with the text.
+            throw new FormatException($"\"{text}\": {e.Message}", e);
+        }
 
         static double Number(string name, string value) =>
             double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var number)
@@ -210,6 +266,12 @@ public sealed class RelativeSize
         if (Max < Min)
         {
             throw new ArgumentException($"Max ({Max}) is less than Min ({Min}).");
+        }
+
+        if (_breakpointList.Length > 0 && (Portrait is not null || Landscape is not null))
+        {
+            throw new ArgumentException(
+                "Set Breakpoints or Portrait/Landscape, not both: they would compete to choose the percentage.");
         }
 
         if (Source is not null && AncestorType is not null)
@@ -240,9 +302,10 @@ public sealed class RelativeSize
     {
         var percent = window switch
         {
+            null => Percent,
+            { } w when _breakpointList.Length > 0 => ByWidth(w.Width),
             { } w when w.Width > w.Height => Landscape ?? Percent,
             { } => Portrait ?? Percent,
-            null => Percent,
         };
 
         var dimension = Axis switch
@@ -254,7 +317,55 @@ public sealed class RelativeSize
             _ => throw new InvalidOperationException($"Unknown axis {Axis}."),
         };
 
-        return Math.Clamp(dimension * percent / 100 + Offset, Min, Max);
+        var value = dimension * percent / 100 + Offset;
+
+        return Math.Clamp(Round ? Math.Round(value, MidpointRounding.AwayFromZero) : value, Min, Max);
+    }
+
+    private double ByWidth(double windowWidth)
+    {
+        var percent = Percent;
+
+        foreach (var (minWidth, breakpointPercent) in _breakpointList)
+        {
+            if (windowWidth >= minWidth)
+            {
+                percent = breakpointPercent;
+            }
+        }
+
+        return percent;
+    }
+
+    private static (double MinWidth, double Percent)[] ParseBreakpoints(string text)
+    {
+        var list = new List<(double, double)>();
+
+        foreach (var pair in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var colon = pair.IndexOf(':');
+            if (colon < 0
+                || !double.TryParse(pair[..colon], NumberStyles.Float, CultureInfo.InvariantCulture, out var width)
+                || !double.TryParse(pair[(colon + 1)..], NumberStyles.Float, CultureInfo.InvariantCulture, out var percent)
+                || !double.IsFinite(width) || width < 0 || !double.IsFinite(percent) || percent < 0)
+            {
+                throw new ArgumentException(
+                    $"'{pair}' in Breakpoints \"{text}\" is not width:percent, both non-negative numbers.");
+            }
+
+            list.Add((width, percent));
+        }
+
+        var sorted = list.OrderBy(b => b.Item1).ToArray();
+        for (var i = 1; i < sorted.Length; i++)
+        {
+            if (sorted[i].Item1 == sorted[i - 1].Item1)
+            {
+                throw new ArgumentException($"Breakpoints \"{text}\" names width {sorted[i].Item1} twice.");
+            }
+        }
+
+        return sorted;
     }
 
     private static double FiniteNonNegative(double value) =>

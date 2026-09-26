@@ -12,8 +12,9 @@ namespace Me.Toolkit.Maui.Sizing;
 /// phone rotated, a parent laid out again — so it adapts the way CSS <c>%</c> and <c>vw</c> do.
 /// </para>
 /// <para>
-/// It works on any <see cref="double"/> bindable property of a <see cref="VisualElement"/>:
-/// <c>WidthRequest</c>, <c>HeightRequest</c>, <c>FontSize</c>, <c>Spacing</c> and so on. It cannot be
+/// It works on any <see cref="double"/> bindable property of a <see cref="VisualElement"/> -
+/// <c>WidthRequest</c>, <c>HeightRequest</c>, <c>FontSize</c>, <c>Spacing</c> and so on - and on
+/// <see cref="Thickness"/> ones, <c>Margin</c> and <c>Padding</c>, as a uniform thickness. It cannot be
 /// used in a <see cref="Style"/> setter, because the size is tracked per element; for styles use
 /// <see cref="RelativeSizing"/>'s attached properties.
 /// </para>
@@ -42,6 +43,15 @@ public sealed class RelativeExtension : IMarkupExtension<BindingBase>
     /// is half the space less a gap. See <see cref="RelativeSize.Offset"/>.
     /// </summary>
     public double Offset { get; set; }
+
+    /// <summary>
+    /// Percentages by window width, like CSS media queries: <c>Breakpoints='600:50 1200:33'</c>. See
+    /// <see cref="RelativeSize.Breakpoints"/>.
+    /// </summary>
+    public string? Breakpoints { get; set; }
+
+    /// <summary>Rounds the result to whole units. See <see cref="RelativeSize.Round"/>.</summary>
+    public bool Round { get; set; }
 
     /// <summary>What the size is a percentage of. Defaults to <see cref="SizeReference.Parent"/>.</summary>
     public SizeReference To { get; set; } = SizeReference.Parent;
@@ -98,6 +108,8 @@ public sealed class RelativeExtension : IMarkupExtension<BindingBase>
             Portrait = Portrait,
             Landscape = Landscape,
             Offset = Offset,
+            Breakpoints = Breakpoints,
+            Round = Round,
             To = To,
             Axis = Axis,
             Min = Min,

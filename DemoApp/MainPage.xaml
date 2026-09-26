@@ -107,7 +107,7 @@
                 <!-- Me.Toolkit.Maui.Configuration -->
                 <tabView:SfTabItem Header="Config">
                     <tabView:SfTabItem.Content>
-                        <Grid BindingContext="{Binding Configuration}" RowDefinitions="Auto,*">
+                        <Grid x:DataType="vm:ConfigurationViewModel" BindingContext="{Binding Configuration}" RowDefinitions="Auto,*">
                             <Label
                                 Margin="16,14,16,10"
                                 Style="{StaticResource Blurb}"
@@ -132,7 +132,7 @@
                 <!-- Me.Toolkit.Maui.Hosting -->
                 <tabView:SfTabItem Header="Hosting">
                     <tabView:SfTabItem.Content>
-                        <ScrollView BindingContext="{Binding Hosting}">
+                        <ScrollView x:DataType="vm:HostingViewModel" BindingContext="{Binding Hosting}">
                             <VerticalStackLayout Padding="16,14" Spacing="10">
 
                                 <Label
@@ -180,7 +180,7 @@
                 <!-- Me.Toolkit.Maui.Nfc -->
                 <tabView:SfTabItem Header="NFC">
                     <tabView:SfTabItem.Content>
-                        <Grid BindingContext="{Binding Nfc}" RowDefinitions="Auto,*">
+                        <Grid x:DataType="vm:NfcViewModel" BindingContext="{Binding Nfc}" RowDefinitions="Auto,*">
                             <VerticalStackLayout Padding="16,14" Spacing="12">
 
                                 <HorizontalStackLayout Spacing="10">
@@ -218,7 +218,7 @@
                 <!-- Me.Toolkit.Maui.WebHostPatch -->
                 <tabView:SfTabItem Header="Web host">
                     <tabView:SfTabItem.Content>
-                        <ScrollView BindingContext="{Binding WebHost}">
+                        <ScrollView x:DataType="vm:WebHostViewModel" BindingContext="{Binding WebHost}">
                             <VerticalStackLayout Padding="16,14" Spacing="12">
 
                                 <Label
@@ -380,6 +380,26 @@
                                             BindingContext="{x:Reference LeftHalf}"
                                             Style="{StaticResource Value}"
                                             Text="{Binding Width, StringFormat='each measured {0:F0}'}" />
+                                    </VerticalStackLayout>
+                                </Border>
+
+                                <!-- Breakpoints choose the percentage by window width, like CSS media
+                                     queries; Round gives whole units; the padding is a relative
+                                     Thickness, the same on every side. -->
+                                <Border Padding="{me:Relative 1.5, To=Window, Min=8, Max=24, Round=True}" Style="{StaticResource Card}">
+                                    <VerticalStackLayout Spacing="6">
+                                        <Label Style="{StaticResource Caption}" Text="BREAKPOINTS: 90% UNDER 600, 60% FROM 600, 35% FROM 1200 (WINDOW WIDTH)" />
+                                        <BoxView
+                                            x:Name="Responsive"
+                                            HeightRequest="20"
+                                            HorizontalOptions="Start"
+                                            Color="#512BD4"
+                                            WidthRequest="{me:Relative 90, Breakpoints='600:60 1200:35', Round=True}" />
+                                        <Label
+                                            x:DataType="BoxView"
+                                            BindingContext="{x:Reference Responsive}"
+                                            Style="{StaticResource Value}"
+                                            Text="{Binding Width, StringFormat='measured {0}'}" />
                                     </VerticalStackLayout>
                                 </Border>
 

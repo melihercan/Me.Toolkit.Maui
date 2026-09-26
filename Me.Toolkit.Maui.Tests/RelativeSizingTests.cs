@@ -125,6 +125,163 @@ public class RelativeSizingTests
         grid.FindByName<BoxView>("Wide").HeightRequest.Should().Be(150);
     }
 
+    // --- Thickness -----------------------------------------------------------------------------
+
+    [Fact]
+    public void A_Thickness_gets_the_value_on_every_side()
+    {
+        var child = ChildOf(400, 100);
+
+        child.SetRelativeSize(View.MarginProperty, new RelativeSize(5));
+
+        child.Margin.Should().Be(new Thickness(20));
+    }
+
+    [Fact]
+    public void Margin_and_Padding_attached_properties_apply_and_clear()
+    {
+        var grid = new Grid();
+        Arrange(new Grid { grid }, 400, 100);
+
+        RelativeSizing.SetPadding(grid, RelativeSize.Parse("10"));
+        RelativeSizing.SetMargin(grid, RelativeSize.Parse("5, Round=True"));
+
+        grid.Padding.Should().Be(new Thickness(40));
+        grid.Margin.Should().Be(new Thickness(20));
+
+        RelativeSizing.SetPadding(grid, null);
+        grid.Padding.Should().Be(new Thickness(0));
+    }
+
+    [Fact]
+    public void Padding_on_an_element_without_one_says_so()
+    {
+        var set = () => RelativeSizing.SetPadding(new BoxView(), RelativeSize.Parse("10"));
+
+        set.Should().Throw<NotSupportedException>().WithMessage("*BoxView has no Padding*");
+    }
+
+    // --- Breakpoints ---------------------------------------------------------------------------
+
+    private static (BoxView Child, Window Window) InWindowOfWidth(double width)
+    {
+        // The parent keeps one width while the window changes, so what changes the value is the
+        // breakpoint, not the reference.
+        var child = new BoxView();
+        var parent = new Grid { child };
+        var window = new Window(new ContentPage { Content = parent });
+        ((IWindow)window).FrameChanged(new Rect(0, 0, width, 800));
+        Arrange(parent, 1000, 100);
+
+        return (child, window);
+    }
+
+    [Theory]
+    [InlineData(500, 100)]
+    [InlineData(600, 50)]
+    [InlineData(1199, 50)]
+    [InlineData(1200, 33)]
+    [InlineData(4000, 33)]
+    public void Breakpoints_choose_the_percentage_by_window_width(double windowWidth, double expectedPercent)
+    {
+        var (child, _) = InWindowOfWidth(windowWidth);
+
+        child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(100) { Breakpoints = "600:50 1200:33" });
+
+        child.WidthRequest.Should().Be(10 * expectedPercent);
+    }
+
+    [Fact]
+    public void Breakpoints_follow_the_window_as_it_is_resized()
+    {
+        var (child, window) = InWindowOfWidth(500);
+        child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(100) { Breakpoints = "1200:33 600:50" });
+        child.WidthRequest.Should().Be(1000);
+
+        ((IWindow)window).FrameChanged(new Rect(0, 0, 900, 800));
+        child.WidthRequest.Should().Be(500, "the pairs may be given in any order");
+
+        ((IWindow)window).FrameChanged(new Rect(0, 0, 1500, 800));
+        child.WidthRequest.Should().Be(330);
+    }
+
+    [Fact]
+    public void Outside_a_window_breakpoints_leave_Percent()
+    {
+        var child = ChildOf(1000, 100);
+
+        child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(100) { Breakpoints = "0:10" });
+
+        child.WidthRequest.Should().Be(1000);
+    }
+
+    [Theory]
+    [InlineData("600-50")]
+    [InlineData("600:")]
+    [InlineData("x:50")]
+    [InlineData("-1:50")]
+    [InlineData("600:-5")]
+    [InlineData("600:50 600:40")]
+    public void Malformed_breakpoints_are_refused(string breakpoints)
+    {
+        var create = () => new RelativeSize(100) { Breakpoints = breakpoints };
+
+        create.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Breakpoints_and_an_orientation_override_are_refused_together()
+    {
+        var set = () => new BoxView().SetRelativeSize(VisualElement.WidthRequestProperty,
+            new RelativeSize(100) { Breakpoints = "600:50", Landscape = 20 });
+
+        set.Should().Throw<ArgumentException>().WithMessage("*not both*");
+    }
+
+    // --- Round ---------------------------------------------------------------------------------
+
+    [Theory]
+    [InlineData(false, 33.3)]
+    [InlineData(true, 33)]
+    public void Round_gives_whole_units(bool round, double expected)
+    {
+        var child = ChildOf(100, 100);
+
+        child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(33.3) { Round = round });
+
+        child.WidthRequest.Should().BeApproximately(expected, 1e-9);
+    }
+
+    [Fact]
+    public void Rounding_happens_before_the_clamp_so_it_never_escapes_it()
+    {
+        var child = ChildOf(100, 100);
+
+        child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(40.6) { Round = true, Max = 40.5 });
+
+        child.WidthRequest.Should().Be(40.5, "41 would be over Max");
+    }
+
+    [Fact]
+    public void The_markup_extension_takes_Breakpoints_Round_and_a_Thickness()
+    {
+        var grid = new Grid().LoadFromXaml($$$"""
+            <Grid {{{Namespaces}}}>
+              <BoxView x:Name="Box" WidthRequest="{me:Relative 33.3, Breakpoints='600:50 1200:25', Round=True}" Margin="{me:Relative 2}" />
+            </Grid>
+            """);
+        var window = new Window(new ContentPage { Content = grid });
+        ((IWindow)window).FrameChanged(new Rect(0, 0, 500, 800));
+        Arrange(grid, 1000, 100);
+
+        var box = grid.FindByName<BoxView>("Box");
+        box.WidthRequest.Should().Be(333);
+        box.Margin.Should().Be(new Thickness(20));
+
+        ((IWindow)window).FrameChanged(new Rect(0, 0, 800, 800));
+        box.WidthRequest.Should().Be(500);
+    }
+
     // --- Parse ---------------------------------------------------------------------------------
 
     [Fact]
@@ -140,6 +297,22 @@ public class RelativeSizingTests
         size.Offset.Should().Be(-1.5);
         size.Portrait.Should().Be(4);
         size.Landscape.Should().Be(2);
+    }
+
+    [Fact]
+    public void Parse_reads_Breakpoints_and_Round()
+    {
+        var size = RelativeSize.Parse("100, Breakpoints=600:50 1200:33, Round=true");
+
+        size.Percent.Should().Be(100);
+        size.Breakpoints.Should().Be("600:50 1200:33");
+        size.Round.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Parse_needs_no_Percent_when_Breakpoints_cover_every_width()
+    {
+        RelativeSize.Parse("Breakpoints=0:100 600:50").Breakpoints.Should().Be("0:100 600:50");
     }
 
     [Fact]
@@ -193,6 +366,9 @@ public class RelativeSizingTests
     [InlineData("3, To=Moon")]
     [InlineData("3, Axis=7")]
     [InlineData("3, Min=lots")]
+    [InlineData("3, Breakpoints=600-50")]
+    [InlineData("3, Round=maybe")]
+    [InlineData("-3")]
     public void Parse_refuses_what_it_cannot_read(string text)
     {
         var parse = () => RelativeSize.Parse(text);
@@ -326,13 +502,17 @@ public class RelativeSizingTests
 }
 
 /// <summary>
-/// Test classes that load XAML at runtime, run one at a time.
+/// Test classes that load XAML at runtime or change process-wide sizing state, run one at a time.
 /// </summary>
 /// <remarks>
 /// MAUI's <c>XamlLoader</c> fills a static assembly cache on first use without a lock, so two
 /// classes loading XAML in parallel intermittently fail with "An item with the same key has already
 /// been added. Key: Microsoft.Maui.Controls". It showed up once there were two such classes: one run
 /// in three. An app never hits it — XAML is loaded on the UI thread.
+///
+/// The same goes for <c>DisplaySize.Current</c> and <c>LayoutUnits.PointsPerUnit</c>, which the
+/// display and Mac Catalyst tests swap: any window- or display-relative test running alongside would
+/// read the stand-in.
 /// </remarks>
 [CollectionDefinition(Name)]
 public sealed class XamlLoaderCollection
