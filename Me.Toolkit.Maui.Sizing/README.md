@@ -28,8 +28,9 @@ relative one.
 ```
 
 No registration is needed. It works on any `double` property — `WidthRequest`, `HeightRequest`,
-`FontSize`, `Spacing`, `MaximumWidthRequest` and so on — and on `Margin` and `Padding`, which get the
-value on every side: `Padding="{me:Relative 2, To=Window, Min=8, Max=24}"`.
+`FontSize`, `Spacing`, `MaximumWidthRequest` and so on — and on `Margin` and `Padding`:
+`Padding="{me:Relative 2, To=Window, Min=8, Max=24}"` puts the value on every side, and
+`Sides=Horizontal` — or `Vertical`, `Left`, `Top Left` and so on — on only those, the rest 0.
 
 | Option | Values | Default |
 |---|---|---|
@@ -40,7 +41,10 @@ value on every side: `Padding="{me:Relative 2, To=Window, Min=8, Max=24}"`.
 | `Offset` | added after the percentage, may be negative | 0 |
 | `Axis` | `Width`, `Height`, `Shorter`, `Longer` | `Width` |
 | `Min`, `Max` | clamp the result | 0, no limit |
-| `Round` | whole units, before the clamp | `False` |
+| `BreakpointsBy` | `Window`, or `Reference` for a container query | `Window` |
+| `Round` | `None`, `Units` or `Pixels`, before the clamp | `None` |
+| `Sides` | which sides of a margin or padding | `All` |
+| `SafeArea` | with `To=Window`, leave out the notch and system bars | `False` |
 | `Source` | an element, usually `{x:Reference}` | — |
 | `AncestorType` | the nearest ancestor of this type | — |
 
@@ -88,13 +92,44 @@ applies; widths are the window's, in layout units, so they mean the same on ever
 follow the window as it is resized. `Breakpoints` cannot be combined with `Portrait`/`Landscape` —
 both choose the percentage, and rather than pick a winner it is refused.
 
+`BreakpointsBy=Reference` compares the reference's own width instead — the parent, a named element,
+whatever the size is measured against — like a CSS container query. A card can then lay itself out
+one way when it is narrow and another when it is wide, wherever it is placed, and it needs no window.
+
+```xml
+<!-- 100% of a narrow parent; half of one at least 600 wide -->
+<Image WidthRequest="{me:Relative 100, Breakpoints='600:50', BreakpointsBy=Reference}" />
+```
+
+## The safe area
+
+`SafeArea=True` measures the window less its safe area — the notch or display cutout, the status bar,
+the home indicator — so full-width content on a phone in landscape is not cut by the notch:
+
+```xml
+<Image WidthRequest="{me:Relative 100, To=Window, SafeArea=True}" />
+```
+
+It applies to `To=Window` only; a parent or element is already inside whatever safe area the page
+keeps. The insets come from the platform — iOS and Mac Catalyst's `UIWindow.SafeAreaInsets`,
+Android's system-bar and display-cutout insets — because MAUI 10 reports them cross-platform nowhere.
+A Windows window has none. Platforms can report new insets just after the rotation that brings them,
+so the size is recomputed once more shortly after the window resizes.
+
 ## Rounding
 
-`Round=True` rounds to whole units, before `Min`/`Max` so it never escapes them. It gives tidy
-values and sizes that step rather than creep during a resize. It does not give whole physical
-pixels: the platform snaps to those itself, so on a 150% display an odd value still lands between
-two — 469 rendered as 469.333 on Windows, which is 704 pixels. Rounding a value close to 100% of its
-parent can also round up past the space available, by up to half a unit, which layout then trims.
+Rounding happens before `Min`/`Max`, so it never escapes them.
+
+- **`Round=Units`** rounds to whole device-independent units: tidy values, and sizes that step
+  rather than creep during a resize. Not whole pixels on a display scaled by a fraction — at 150%
+  an odd value lands between two, and the platform moves it: 469 rendered as 469.333 on Windows.
+- **`Round=Pixels`** rounds to whole physical pixels of the element's window, so what is requested
+  is what is drawn: requested 591.3333, rendered 591.3333 — 887 pixels at 150%. It uses the density
+  of the monitor the window is on and re-rounds when the window moves to one scaled differently.
+  Outside a window it rounds to whole units.
+
+Rounding a value close to 100% of its parent can round up past the space available, by up to half a
+unit or pixel, which layout then trims.
 
 ## In styles
 
@@ -114,8 +149,8 @@ cannot be written as text, since text cannot name an element or a type.
 `RelativeSizing.WidthRequest`, `HeightRequest`, `FontSize`, `Margin` and `Padding` are available,
 and work directly on an element too: `<BoxView me:RelativeSizing.WidthRequest="25, Offset=10" />`.
 `FontSize` and `Padding` find the property of whichever element they are on, including third-party
-controls with a `FontSizeProperty` or `PaddingProperty`. `Breakpoints=600:50 1200:33` and
-`Round=True` are written the same way.
+controls with a `FontSizeProperty` or `PaddingProperty`. `Breakpoints=600:50 1200:33`,
+`Round=Pixels` and `Sides=Left Top` are written the same way.
 Removing the style removes the size, and the property goes back to its default.
 
 From code, `element.ClearRelativeSize(property)` does the same. Prefer it to `RemoveBinding`: MAUI
@@ -165,8 +200,11 @@ Two other spellings look reasonable and do not work, both because of how MAUI co
   out in, as a CSS percentage refers to the content box. `Source` and `AncestorType` exclude
   padding the same way. A `Border`'s stroke is not subtracted.
 - **Window** is the window the element is in, and follows it as it is resized.
-- **Display** is the main display in device-independent units, and changes on rotation. On a
-  desktop with several monitors it is the main one, not necessarily the one the window is on.
+- **Display** is the display the window is on, in device-independent units, and changes on
+  rotation. **On Windows** it is the monitor the window is actually on, followed as the window is
+  dragged between monitors — 5% of the width read 128 on a 3840-pixel landscape monitor and 72 on a
+  2160-pixel portrait one beside it. Elsewhere it is the main display: a phone has one, and Mac
+  Catalyst offers no per-window screen to ask.
 
 Both are converted to the units pages are laid out in. That matters on **Mac Catalyst**, where an
 app with the iPad idiom — MAUI's template default — is shown scaled to 77%: the window and display
@@ -176,6 +214,23 @@ every window- and display-relative size came out 23% small on a Mac.
 Until the reference has a size — before the first layout, or before the element is in a window —
 the property keeps its default. If the element moves to another parent or window, it follows.
 Setting the property directly replaces the relative size, as it would any binding.
+
+## Build-time checks
+
+The package brings an analyzer that reads the app's XAML during the build and warns, at the line,
+about what would otherwise fail only when the page loads:
+
+| ID | What |
+|---|---|
+| `MTKS001` | `{me:Relative}` in a `Style` setter — use `me:RelativeSizing` |
+| `MTKS002` | a markup extension as the unnamed argument, `{me:Relative {OnIdiom ...}}` — it throws at startup; name it `Percent=` |
+| `MTKS003` | `{me:Relative}` nested inside another markup extension |
+| `MTKS004` | `To=Self` measuring the dimension it sets |
+| `MTKS005` | an invalid option: a malformed `Breakpoints`, `Sides` on a property that is not a margin or padding, `SafeArea` without `To=Window`, conflicting options, bad `me:RelativeSizing` text |
+
+All are warnings, so a false positive never breaks a build that does not ask for
+`-warnaserror`. An unknown option name inside `{me:Relative}` is already a build error from MAUI's
+own XAML compiler.
 
 ## Things to know
 
@@ -198,8 +253,10 @@ Setting the property directly replaces the relative size, as it would any bindin
 
 ## Where it has run
 
-Windows, resized; an Android 16 phone, rotated; Mac Catalyst on macOS 15, resized; an iPhone XR on
-iOS 18, rotated — every card of the repository's demo checked against its expected value.
+Windows, resized and dragged between two monitors; an Android 16 phone, rotated; Mac Catalyst on
+macOS 15, resized; an iPhone XR on iOS 18, rotated — every card of the repository's demo checked
+against its expected value. `Breakpoints`, `Round`, `Sides`, `SafeArea` and relative margins have
+so far run on Windows only.
 
 ## Documentation
 

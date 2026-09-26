@@ -24,6 +24,7 @@
     <ProjectReference Include="..\Me.Toolkit.Maui.Hosting\Me.Toolkit.Maui.Hosting.csproj" />
     <ProjectReference Include="..\Me.Toolkit.Maui.Nfc\Me.Toolkit.Maui.Nfc.csproj" />
     <ProjectReference Include="..\Me.Toolkit.Maui.Sizing\Me.Toolkit.Maui.Sizing.csproj" />
+    <ProjectReference Include="..\Me.Toolkit.Maui.Sizing.Analyzers\Me.Toolkit.Maui.Sizing.Analyzers.csproj" />
     <ProjectReference Include="..\Me.Toolkit.Maui.WebHostPatch\Me.Toolkit.Maui.WebHostPatch.csproj" />
   </ItemGroup>
 
@@ -40,6 +41,8 @@
     <PackageReference Include="xunit.v3" Version="4.0.1" />
     <PackageReference Include="NSubstitute" Version="6.2.0" />
     <PackageReference Include="System.Reflection.MetadataLoadContext" Version="10.0.12" />
+    <!-- Runs Me.Toolkit.Maui.Sizing.Analyzers in-process; the same version it is built against. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
   </ItemGroup>
 
 </Project>

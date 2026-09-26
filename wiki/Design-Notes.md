@@ -310,8 +310,44 @@ two. Space-separated because the text form is already comma-separated. They key 
 layout units, like CSS media queries on the viewport, and are refused alongside `Portrait` and
 `Landscape`, which would choose the percentage too.
 
-**A `Thickness` target gets the value on every side** — relative margins and padding — through a
+**A `Thickness` target gets the value on the chosen `Sides`** — all by default, the rest 0 — through a
 second typed binding rather than a converter, so it stays trim-safe.
+
+**`Round` is `None`, `Units` or `Pixels`.** It began as a boolean for whole units, and running it
+showed whole units are not whole pixels: at 150% a requested 469 rendered as 469.333, the platform's
+own snapping. `Pixels` rounds with the window's `DisplayDensity` and listens to its
+`DisplayDensityChanged`, so it follows a window dragged to a monitor scaled differently; after it,
+requested and rendered widths matched to the fourth decimal. It had not been released, so its type
+could change.
+
+**`To=Display` is the window's monitor on Windows.** MAUI's `DeviceDisplay` only knows the main
+display; WinUI's `DisplayArea.GetFromWindowId` knows the one a window is on, and MAUI raises the
+window's `X` and `Y` as it is dragged. Verified across two monitors, one of them rotated to
+portrait. Mac Catalyst has no per-window screen to ask, and phones have one display.
+
+**`BreakpointsBy=Reference` is a container query**, comparing the reference's own width. It needs no
+window, which is also why it is not counted among the window-dependent options.
+
+**`SafeArea` reads the platform's insets**, because MAUI 10's `SafeAreaEdges` decides whether a
+layout avoids the safe area but reports its size nowhere cross-platform — the only getter is
+iOS-specific and per page. `UIWindow.SafeAreaInsets` on iOS and Mac Catalyst, `WindowInsetsCompat`
+system bars and display cutout on Android, none on Windows. Insets can arrive just after the
+rotation that changes them, so a size using them looks again 150 ms after its window resizes.
+
+**The analyzer reads XAML, not C#.** MAUI already passes every `.xaml` file to analyzers as an
+additional file, tagged `GenKind = Xaml`, so `Me.Toolkit.Maui.Sizing.Analyzers` parses the XML and
+the markup-extension syntax itself and reports at the attribute. It mirrors `RelativeSize`'s
+validation rather than sharing it — an analyzer cannot load MAUI. It ships inside the Sizing package
+under `analyzers/dotnet/cs`, built by a project reference that does not reference its output, so
+its Roslyn dependency never becomes the package's. Proved in a real build of the demo: an unnamed
+`{OnIdiom}` inside `{me:Relative}`, which compiles and then crashes at startup, was reported as
+`MainPage.xaml(274,45): warning MTKS002`. An unknown option name turned out to be a build error from
+MAUI's own XAML compiler already, so the analyzer's value is in what MAUI compiles and then fails at
+runtime. Everything is a warning, so a false positive cannot break a build.
+
+**Grid columns and rows are not supported, deliberately.** A `ColumnDefinition` has no parent and no
+window, and MAUI keeps the grid that owns it internal to XAML, so a relative size there has nothing
+to measure. A percentage of the grid itself is what star sizing already does.
 
 **Unlike `Me.Toolkit.Maui.Nfc`, it has real behavioural coverage.** Elements, windows, bindings and
 the runtime XAML loader all run on the net10.0 slice of Controls, so the tests arrange real

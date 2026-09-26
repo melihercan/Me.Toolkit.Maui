@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Build-time checks for Me.Toolkit.Maui.Sizing's XAML, shipped inside that package under
+    analyzers/dotnet/cs rather than as a package of its own. It reads the app's .xaml files, which
+    MAUI already hands to analyzers as AdditionalFiles, and reports at the line in the XAML.
+
+    netstandard2.0 because that is what the compiler loads analyzers as; Roslyn 4.14 so it runs in
+    any .NET 10 SDK and Visual Studio 17.14 or later.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Me.Toolkit.Maui.Sizing.Analyzers</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Me.Toolkit.Maui.Tests" />
+  </ItemGroup>
+
+</Project>

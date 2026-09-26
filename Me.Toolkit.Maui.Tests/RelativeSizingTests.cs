@@ -144,7 +144,7 @@ public class RelativeSizingTests
         Arrange(new Grid { grid }, 400, 100);
 
         RelativeSizing.SetPadding(grid, RelativeSize.Parse("10"));
-        RelativeSizing.SetMargin(grid, RelativeSize.Parse("5, Round=True"));
+        RelativeSizing.SetMargin(grid, RelativeSize.Parse("5, Round=Units"));
 
         grid.Padding.Should().Be(new Thickness(40));
         grid.Margin.Should().Be(new Thickness(20));
@@ -241,9 +241,9 @@ public class RelativeSizingTests
     // --- Round ---------------------------------------------------------------------------------
 
     [Theory]
-    [InlineData(false, 33.3)]
-    [InlineData(true, 33)]
-    public void Round_gives_whole_units(bool round, double expected)
+    [InlineData(SizeRounding.None, 33.3)]
+    [InlineData(SizeRounding.Units, 33)]
+    public void Round_gives_whole_units(SizeRounding round, double expected)
     {
         var child = ChildOf(100, 100);
 
@@ -257,9 +257,244 @@ public class RelativeSizingTests
     {
         var child = ChildOf(100, 100);
 
-        child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(40.6) { Round = true, Max = 40.5 });
+        child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(40.6) { Round = SizeRounding.Units, Max = 40.5 });
 
         child.WidthRequest.Should().Be(40.5, "41 would be over Max");
+    }
+
+    private static (BoxView Child, Window Window) InDenseWindow(double parentWidth)
+    {
+        var child = new BoxView();
+        var parent = new Grid { child };
+        var window = new Window(new ContentPage { Content = parent });
+        ((IWindow)window).FrameChanged(new Rect(0, 0, 2000, 1000));
+        Arrange(parent, parentWidth, 100);
+
+        return (child, window);
+    }
+
+    private static void WithDensity(double density, Action test)
+    {
+        var original = LayoutUnits.DensityOf;
+        try
+        {
+            LayoutUnits.DensityOf = _ => density;
+            test();
+        }
+        finally
+        {
+            LayoutUnits.DensityOf = original;
+        }
+    }
+
+    [Fact]
+    public void Pixels_rounds_to_whole_physical_pixels()
+    {
+        // The case Round=Units could not fix: 469 units on a 150% display is 703.5 pixels, which
+        // Windows drew as 704 - 469.333 units. Pixels asks for 704 in the first place.
+        WithDensity(1.5, () =>
+        {
+            var (child, _) = InDenseWindow(1340);
+
+            child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(35) { Round = SizeRounding.Pixels });
+
+            child.WidthRequest.Should().BeApproximately(704 / 1.5, 1e-9);
+            (child.WidthRequest * 1.5).Should().BeApproximately(Math.Round(child.WidthRequest * 1.5), 1e-9);
+        });
+    }
+
+    [Fact]
+    public void Pixels_rerounds_when_the_window_moves_to_a_display_with_another_scale()
+    {
+        var density = 1.5;
+        var original = LayoutUnits.DensityOf;
+        try
+        {
+            LayoutUnits.DensityOf = _ => density;
+            var (child, window) = InDenseWindow(1340);
+            child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(35) { Round = SizeRounding.Pixels });
+            child.WidthRequest.Should().BeApproximately(704 / 1.5, 1e-9);
+
+            density = 1.25;
+            ((IWindow)window).DisplayDensityChanged(1.25f);
+
+            child.WidthRequest.Should().BeApproximately(586 / 1.25, 1e-9, "469 x 1.25 = 586.25 pixels, rounded to 586");
+        }
+        finally
+        {
+            LayoutUnits.DensityOf = original;
+        }
+    }
+
+    [Fact]
+    public void Pixels_outside_a_window_rounds_to_whole_units()
+    {
+        var child = ChildOf(100, 100);
+
+        child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(33.3) { Round = SizeRounding.Pixels });
+
+        child.WidthRequest.Should().Be(33);
+    }
+
+    // --- SafeArea ------------------------------------------------------------------------------
+
+    private static void WithInsets(Thickness insets, Action test)
+    {
+        var original = SafeArea.InsetsOf;
+        try
+        {
+            SafeArea.InsetsOf = _ => insets;
+            test();
+        }
+        finally
+        {
+            SafeArea.InsetsOf = original;
+        }
+    }
+
+    private static Label InLandscapePhone()
+    {
+        // An iPhone XR on its side: 896 x 414 points, the notch's 44 on both sides - iOS reports it
+        // on each - and the home indicator's 21 at the bottom.
+        var label = new Label();
+        var window = new Window(new ContentPage { Content = new Grid { label } });
+        ((IWindow)window).FrameChanged(new Rect(0, 0, 896, 414));
+
+        return label;
+    }
+
+    [Theory]
+    [InlineData(false, SizeAxis.Width, 896)]
+    [InlineData(true, SizeAxis.Width, 808)]
+    [InlineData(true, SizeAxis.Height, 393)]
+    public void SafeArea_leaves_out_the_notch_and_home_indicator(bool safeArea, SizeAxis axis, double expected)
+    {
+        WithInsets(new Thickness(44, 0, 44, 21), () =>
+        {
+            var label = InLandscapePhone();
+
+            label.SetRelativeSize(Label.FontSizeProperty,
+                new RelativeSize(100) { To = SizeReference.Window, SafeArea = safeArea, Axis = axis });
+
+            label.FontSize.Should().Be(expected);
+        });
+    }
+
+    [Fact]
+    public void SafeArea_with_a_reference_other_than_the_window_is_refused()
+    {
+        var set = () => new Label().SetRelativeSize(Label.FontSizeProperty, new RelativeSize(10) { SafeArea = true });
+
+        set.Should().Throw<ArgumentException>().WithMessage("*To=Window*");
+    }
+
+    [Fact]
+    public void SafeArea_from_text_and_from_XAML()
+    {
+        RelativeSize.Parse("100, To=Window, SafeArea=true").SafeArea.Should().BeTrue();
+
+        WithInsets(new Thickness(44, 0, 44, 21), () =>
+        {
+            var grid = new Grid().LoadFromXaml($$$"""
+                <Grid {{{Namespaces}}}>
+                  <BoxView x:Name="Box" WidthRequest="{me:Relative 50, To=Window, SafeArea=True}" />
+                </Grid>
+                """);
+            var window = new Window(new ContentPage { Content = grid });
+            ((IWindow)window).FrameChanged(new Rect(0, 0, 896, 414));
+
+            grid.FindByName<BoxView>("Box").WidthRequest.Should().Be(404);
+        });
+    }
+
+    // --- Sides ---------------------------------------------------------------------------------
+
+    [Theory]
+    [InlineData(ThicknessSides.Horizontal, 20, 0, 20, 0)]
+    [InlineData(ThicknessSides.Vertical, 0, 20, 0, 20)]
+    [InlineData(ThicknessSides.Left | ThicknessSides.Top, 20, 20, 0, 0)]
+    [InlineData(ThicknessSides.All, 20, 20, 20, 20)]
+    public void Sides_choose_which_sides_of_a_Thickness_get_the_value(ThicknessSides sides, double left, double top, double right, double bottom)
+    {
+        var child = ChildOf(400, 100);
+
+        child.SetRelativeSize(View.MarginProperty, new RelativeSize(5) { Sides = sides });
+
+        child.Margin.Should().Be(new Thickness(left, top, right, bottom));
+    }
+
+    [Theory]
+    [InlineData("5, Sides=Horizontal", ThicknessSides.Horizontal)]
+    [InlineData("5, Sides=Left Top", ThicknessSides.Left | ThicknessSides.Top)]
+    [InlineData("5, Sides=left|bottom", ThicknessSides.Left | ThicknessSides.Bottom)]
+    public void Parse_reads_Sides(string text, ThicknessSides expected)
+    {
+        RelativeSize.Parse(text).Sides.Should().Be(expected);
+    }
+
+    [Fact]
+    public void Sides_on_a_property_that_is_not_a_Thickness_is_refused()
+    {
+        var set = () => new BoxView().SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(5) { Sides = ThicknessSides.Left });
+
+        set.Should().Throw<ArgumentException>().WithMessage("*margin or padding*");
+    }
+
+    [Fact]
+    public void Sides_naming_no_side_is_refused()
+    {
+        var set = () => new BoxView().SetRelativeSize(View.MarginProperty, new RelativeSize(5) { Sides = ThicknessSides.None });
+
+        set.Should().Throw<ArgumentException>();
+    }
+
+    // --- BreakpointsBy=Reference ---------------------------------------------------------------
+
+    [Theory]
+    [InlineData(500, 50)]
+    [InlineData(700, 210)]
+    public void BreakpointsBy_Reference_compares_the_reference_width_not_the_window(double parentWidth, double expected)
+    {
+        // A container query: the window is 2000 wide either way, so only the parent decides.
+        var (child, _) = InDenseWindow(parentWidth);
+
+        child.SetRelativeSize(VisualElement.WidthRequestProperty,
+            new RelativeSize(10) { Breakpoints = "600:30", BreakpointsBy = BreakpointSource.Reference });
+
+        child.WidthRequest.Should().Be(expected);
+    }
+
+    [Fact]
+    public void BreakpointsBy_Reference_needs_no_window()
+    {
+        var child = ChildOf(700, 100);
+
+        child.SetRelativeSize(VisualElement.WidthRequestProperty,
+            new RelativeSize(10) { Breakpoints = "600:30", BreakpointsBy = BreakpointSource.Reference });
+
+        child.WidthRequest.Should().Be(210);
+    }
+
+    [Fact]
+    public void The_markup_extension_takes_Round_Pixels_Sides_and_BreakpointsBy()
+    {
+        WithDensity(1.5, () =>
+        {
+            var grid = new Grid().LoadFromXaml($$$"""
+                <Grid {{{Namespaces}}}>
+                  <BoxView x:Name="Box"
+                           WidthRequest="{me:Relative 10, Breakpoints='600:35', BreakpointsBy=Reference, Round=Pixels}"
+                           Margin="{me:Relative 2, Sides=Horizontal}" />
+                </Grid>
+                """);
+            var window = new Window(new ContentPage { Content = grid });
+            ((IWindow)window).FrameChanged(new Rect(0, 0, 400, 800));
+            Arrange(grid, 1340, 100);
+
+            var box = grid.FindByName<BoxView>("Box");
+            box.WidthRequest.Should().BeApproximately(704 / 1.5, 1e-9, "35% of the 1340-wide parent, though the window is only 400");
+            box.Margin.Should().Be(new Thickness(26.8, 0, 26.8, 0));
+        });
     }
 
     [Fact]
@@ -267,7 +502,7 @@ public class RelativeSizingTests
     {
         var grid = new Grid().LoadFromXaml($$$"""
             <Grid {{{Namespaces}}}>
-              <BoxView x:Name="Box" WidthRequest="{me:Relative 33.3, Breakpoints='600:50 1200:25', Round=True}" Margin="{me:Relative 2}" />
+              <BoxView x:Name="Box" WidthRequest="{me:Relative 33.3, Breakpoints='600:50 1200:25', Round=Units}" Margin="{me:Relative 2}" />
             </Grid>
             """);
         var window = new Window(new ContentPage { Content = grid });
@@ -302,11 +537,11 @@ public class RelativeSizingTests
     [Fact]
     public void Parse_reads_Breakpoints_and_Round()
     {
-        var size = RelativeSize.Parse("100, Breakpoints=600:50 1200:33, Round=true");
+        var size = RelativeSize.Parse("100, Breakpoints=600:50 1200:33, Round=units");
 
         size.Percent.Should().Be(100);
         size.Breakpoints.Should().Be("600:50 1200:33");
-        size.Round.Should().BeTrue();
+        size.Round.Should().Be(SizeRounding.Units);
     }
 
     [Fact]

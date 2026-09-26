@@ -100,17 +100,35 @@ public sealed class RelativeSize
     }
 
     /// <summary>
-    /// Rounds the result to a whole number of units, before <see cref="Min"/> and <see cref="Max"/>
-    /// are applied so it never escapes them: tidy values, and a size that steps rather than creeps
-    /// by fractions during a resize. Defaults to <see langword="false"/>.
+    /// How the result is rounded, before <see cref="Min"/> and <see cref="Max"/> so it never escapes
+    /// them. Defaults to <see cref="SizeRounding.None"/>.
     /// </summary>
     /// <remarks>
-    /// Whole units are not whole physical pixels. The platform snaps to those itself, so on a 150%
-    /// display an odd value still lands between two: 469 units rendered as 469.333 on Windows,
-    /// which is 704 pixels. And rounding a value near 100% of its parent can round up past the space
-    /// available, by up to half a unit, which layout then trims.
+    /// Rounding a value close to 100% of its parent can round up past the space available, by up to
+    /// half a unit or pixel, which layout then trims.
     /// </remarks>
-    public bool Round { get; init; }
+    public SizeRounding Round { get; init; }
+
+    /// <summary>
+    /// Which sides of a <see cref="Thickness"/> property — <c>Margin</c>, <c>Padding</c> — get the
+    /// value; the others are 0. Defaults to <see cref="ThicknessSides.All"/>. Only meaningful for a
+    /// <see cref="Thickness"/> property.
+    /// </summary>
+    public ThicknessSides Sides { get; init; } = ThicknessSides.All;
+
+    /// <summary>
+    /// What <see cref="Breakpoints"/> are compared against: the window's width, the default, or the
+    /// reference's own width, like a CSS container query.
+    /// </summary>
+    public BreakpointSource BreakpointsBy { get; init; } = BreakpointSource.Window;
+
+    /// <summary>
+    /// With <see cref="SizeReference.Window"/>, measure the window less its safe area — a notch, a
+    /// display cutout, the status bar and home indicator — so full-width content on a phone in
+    /// landscape is not cut by the notch. Defaults to <see langword="false"/>; a desktop window has
+    /// no safe area to subtract.
+    /// </summary>
+    public bool SafeArea { get; init; }
 
     /// <summary>
     /// What the size is a percentage of. Defaults to <see cref="SizeReference.Parent"/>. Leave it
@@ -157,7 +175,11 @@ public sealed class RelativeSize
     /// Whether the percentage is chosen by the window — its orientation or its width — whatever the
     /// size is measured against.
     /// </summary>
-    internal bool DependsOnWindow => Portrait is not null || Landscape is not null || _breakpointList.Length > 0;
+    internal bool DependsOnWindow =>
+        Portrait is not null
+        || Landscape is not null
+        || (_breakpointList.Length > 0 && BreakpointsBy == BreakpointSource.Window)
+        || Round == SizeRounding.Pixels;
 
     /// <summary>
     /// Reads the text form used by <see cref="RelativeSizing"/>'s attached properties: an optional
@@ -179,7 +201,10 @@ public sealed class RelativeSize
         SizeReference? to = null;
         SizeAxis? axis = null;
         string? breakpoints = null;
-        var round = false;
+        SizeRounding? round = null;
+        bool? safeArea = null;
+        ThicknessSides? sides = null;
+        BreakpointSource? breakpointsBy = null;
 
         var parts = text.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
@@ -210,14 +235,17 @@ public sealed class RelativeSize
                 case "to": to = Enumeration<SizeReference>(name, value); break;
                 case "axis": axis = Enumeration<SizeAxis>(name, value); break;
                 case "breakpoints": breakpoints = value; break;
-                case "round":
-                    round = bool.TryParse(value, out var r)
-                        ? r
+                case "round": round = Enumeration<SizeRounding>(name, value); break;
+                case "sides": sides = Flags<ThicknessSides>(name, value); break;
+                case "breakpointsby": breakpointsBy = Enumeration<BreakpointSource>(name, value); break;
+                case "safearea":
+                    safeArea = bool.TryParse(value, out var sa)
+                        ? sa
                         : throw new FormatException($"{name}={value} is not True or False.");
                     break;
                 default:
                     throw new FormatException(
-                        $"Unknown option '{name}' in \"{text}\". Expected Percent, Portrait, Landscape, Breakpoints, Offset, Round, To, Axis, Min or Max.");
+                        $"Unknown option '{name}' in \"{text}\". Expected Percent, Portrait, Landscape, Breakpoints, BreakpointsBy, Offset, Round, Sides, SafeArea, To, Axis, Min or Max.");
             }
         }
 
@@ -231,7 +259,10 @@ public sealed class RelativeSize
             return new RelativeSize(percent ?? 0)
             {
                 Breakpoints = breakpoints,
-                Round = round,
+                Round = round ?? SizeRounding.None,
+                Sides = sides ?? ThicknessSides.All,
+                BreakpointsBy = breakpointsBy ?? BreakpointSource.Window,
+                SafeArea = safeArea ?? false,
                 Portrait = portrait,
                 Landscape = landscape,
                 Offset = offset ?? 0,
@@ -253,6 +284,19 @@ public sealed class RelativeSize
                 ? number
                 : throw new FormatException($"{name}={value} is not a number.");
 
+        // "Left Top" or "Left|Top" as well as the named combinations.
+        static T Flags<T>(string name, string value)
+            where T : struct, Enum
+        {
+            var combined = 0;
+            foreach (var part in value.Split(['|', ' '], StringSplitOptions.RemoveEmptyEntries))
+            {
+                combined |= Convert.ToInt32(Enumeration<T>(name, part));
+            }
+
+            return (T)Enum.ToObject(typeof(T), combined);
+        }
+
         static T Enumeration<T>(string name, string value)
             where T : struct, Enum =>
             Enum.TryParse<T>(value, ignoreCase: true, out var result) && Enum.IsDefined(result)
@@ -272,6 +316,16 @@ public sealed class RelativeSize
         {
             throw new ArgumentException(
                 "Set Breakpoints or Portrait/Landscape, not both: they would compete to choose the percentage.");
+        }
+
+        if (Sides == ThicknessSides.None || (Sides & ~ThicknessSides.All) != 0)
+        {
+            throw new ArgumentException($"Sides={Sides} names no side, or one that does not exist.");
+        }
+
+        if (SafeArea && (To != SizeReference.Window || Source is not null || AncestorType is not null))
+        {
+            throw new ArgumentException("SafeArea applies to To=Window, the only reference that includes a notch or cutout.");
         }
 
         if (Source is not null && AncestorType is not null)
@@ -298,15 +352,19 @@ public sealed class RelativeSize
     /// The element's window size, which decides the orientation, or <see langword="null"/> when it
     /// is not in one — in which case <see cref="Percent"/> applies.
     /// </param>
-    internal double Resolve(Size reference, Size? window = null)
+    /// <param name="pixelsPerUnit">
+    /// Physical pixels per layout unit in the element's window, for <see cref="SizeRounding.Pixels"/>.
+    /// </param>
+    internal double Resolve(Size reference, Size? window = null, double pixelsPerUnit = 1)
     {
-        var percent = window switch
-        {
-            null => Percent,
-            { } w when _breakpointList.Length > 0 => ByWidth(w.Width),
-            { } w when w.Width > w.Height => Landscape ?? Percent,
-            { } => Portrait ?? Percent,
-        };
+        var percent = _breakpointList.Length > 0
+            ? (BreakpointsBy == BreakpointSource.Reference ? ByWidth(reference.Width) : window is { } bw ? ByWidth(bw.Width) : Percent)
+            : window switch
+            {
+                null => Percent,
+                { } w when w.Width > w.Height => Landscape ?? Percent,
+                { } => Portrait ?? Percent,
+            };
 
         var dimension = Axis switch
         {
@@ -319,7 +377,15 @@ public sealed class RelativeSize
 
         var value = dimension * percent / 100 + Offset;
 
-        return Math.Clamp(Round ? Math.Round(value, MidpointRounding.AwayFromZero) : value, Min, Max);
+        var rounded = Round switch
+        {
+            SizeRounding.Units => Math.Round(value, MidpointRounding.AwayFromZero),
+            SizeRounding.Pixels when pixelsPerUnit > 0 => Math.Round(value * pixelsPerUnit, MidpointRounding.AwayFromZero) / pixelsPerUnit,
+            SizeRounding.Pixels => Math.Round(value, MidpointRounding.AwayFromZero),
+            _ => value,
+        };
+
+        return Math.Clamp(rounded, Min, Max);
     }
 
     private double ByWidth(double windowWidth)

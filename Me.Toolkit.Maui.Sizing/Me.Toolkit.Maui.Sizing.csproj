@@ -29,4 +29,21 @@ First release, 26.9.26.
     <InternalsVisibleTo Include="Me.Toolkit.Maui.Tests" />
   </ItemGroup>
 
+  <!--
+    The XAML analyzer ships inside this package, under analyzers/dotnet/cs, so every app that uses
+    {me:Relative} gets its build-time checks without a second package. Built first, not referenced:
+    nothing in this library calls it, and its Roslyn dependency must not become this package's.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Me.Toolkit.Maui.Sizing.Analyzers\Me.Toolkit.Maui.Sizing.Analyzers.csproj"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all"
+                      SetTargetFramework="TargetFramework=netstandard2.0"
+                      SkipGetTargetFrameworkProperties="true" />
+    <None Include="..\Me.Toolkit.Maui.Sizing.Analyzers\bin\$(Configuration)\netstandard2.0\Me.Toolkit.Maui.Sizing.Analyzers.dll"
+          Pack="true"
+          PackagePath="analyzers/dotnet/cs"
+          Visible="false" />
+  </ItemGroup>
+
 </Project>

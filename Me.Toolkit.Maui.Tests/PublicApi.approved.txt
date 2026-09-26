@@ -52,13 +52,19 @@ assembly Me.Toolkit.Maui.Nfc
     property System.String TagId { get; }
 
 assembly Me.Toolkit.Maui.Sizing
+  type Me.Toolkit.Maui.Sizing.BreakpointSource : enum System.Int32
+    Window = 0
+    Reference = 1
   type Me.Toolkit.Maui.Sizing.RelativeExtension : sealed class
     ctor .ctor()
     method Microsoft.Maui.Controls.BindingBase ProvideValue(System.IServiceProvider serviceProvider)
+    property Me.Toolkit.Maui.Sizing.BreakpointSource BreakpointsBy { get; set; }
     property Me.Toolkit.Maui.Sizing.SizeAxis Axis { get; set; }
     property Me.Toolkit.Maui.Sizing.SizeReference To { get; set; }
+    property Me.Toolkit.Maui.Sizing.SizeRounding Round { get; set; }
+    property Me.Toolkit.Maui.Sizing.ThicknessSides Sides { get; set; }
     property Microsoft.Maui.Controls.VisualElement Source { get; set; }
-    property System.Boolean Round { get; set; }
+    property System.Boolean SafeArea { get; set; }
     property System.Double Max { get; set; }
     property System.Double Min { get; set; }
     property System.Double Offset { get; set; }
@@ -70,10 +76,13 @@ assembly Me.Toolkit.Maui.Sizing
   type Me.Toolkit.Maui.Sizing.RelativeSize : sealed class
     ctor .ctor(System.Double percent)
     method static Me.Toolkit.Maui.Sizing.RelativeSize Parse(System.String text)
+    property Me.Toolkit.Maui.Sizing.BreakpointSource BreakpointsBy { get; set; }
     property Me.Toolkit.Maui.Sizing.SizeAxis Axis { get; set; }
     property Me.Toolkit.Maui.Sizing.SizeReference To { get; set; }
+    property Me.Toolkit.Maui.Sizing.SizeRounding Round { get; set; }
+    property Me.Toolkit.Maui.Sizing.ThicknessSides Sides { get; set; }
     property Microsoft.Maui.Controls.VisualElement Source { get; set; }
-    property System.Boolean Round { get; set; }
+    property System.Boolean SafeArea { get; set; }
     property System.Double Max { get; set; }
     property System.Double Min { get; set; }
     property System.Double Offset { get; set; }
@@ -115,6 +124,19 @@ assembly Me.Toolkit.Maui.Sizing
     Window = 1
     Display = 2
     Self = 3
+  type Me.Toolkit.Maui.Sizing.SizeRounding : enum System.Int32
+    None = 0
+    Units = 1
+    Pixels = 2
+  type Me.Toolkit.Maui.Sizing.ThicknessSides : enum System.Int32
+    None = 0
+    Left = 1
+    Top = 2
+    Right = 4
+    Horizontal = 5
+    Bottom = 8
+    Vertical = 10
+    All = 15
 
 assembly Me.Toolkit.Maui.WebHostPatch
   type Me.Toolkit.Maui.WebHostPatch.IMeToolkitMauiWebHost : interface

@@ -74,6 +74,12 @@ public static class RelativeSizeExtensions
         return trackers;
     }
 
+    private static Thickness ToThickness(double value, ThicknessSides sides) => new(
+        sides.HasFlag(ThicknessSides.Left) ? value : 0,
+        sides.HasFlag(ThicknessSides.Top) ? value : 0,
+        sides.HasFlag(ThicknessSides.Right) ? value : 0,
+        sides.HasFlag(ThicknessSides.Bottom) ? value : 0);
+
     internal static BindingBase CreateBinding(VisualElement element, BindableProperty property, RelativeSize size)
     {
         size.Validate();
@@ -104,6 +110,13 @@ public static class RelativeSizeExtensions
             previous.Stop();
         }
 
+        if (size.Sides != ThicknessSides.All && property.ReturnType != typeof(Thickness))
+        {
+            throw new ArgumentException(
+                $"Sides={size.Sides} applies to a margin or padding; {property.PropertyName} is a {property.ReturnType.Name}.",
+                nameof(size));
+        }
+
         var tracker = new RelativeSizeTracker(element, size);
         trackers[property] = tracker;
 
@@ -119,8 +132,10 @@ public static class RelativeSizeExtensions
         // window. Two bindings rather than a conversion, so each stays typed and trim-safe.
         if (property.ReturnType == typeof(Thickness))
         {
+            var sides = size.Sides;
+
             return new TypedBinding<RelativeSizeTracker, Thickness>(
-                static t => t.Value is { } value ? (new Thickness(value), true) : (default, false),
+                t => t.Value is { } value ? (ToThickness(value, sides), true) : (default, false),
                 setter: null,
                 handlers)
             {

@@ -96,6 +96,8 @@
 		<ProjectReference Include="..\Me.Toolkit.Maui.Hosting\Me.Toolkit.Maui.Hosting.csproj" />
 		<ProjectReference Include="..\Me.Toolkit.Maui.Nfc\Me.Toolkit.Maui.Nfc.csproj" />
 		<ProjectReference Include="..\Me.Toolkit.Maui.Sizing\Me.Toolkit.Maui.Sizing.csproj" />
+		<!-- What the Sizing package brings along as an analyzer; a project reference needs it said. -->
+		<ProjectReference Include="..\Me.Toolkit.Maui.Sizing.Analyzers\Me.Toolkit.Maui.Sizing.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 		<ProjectReference Include="..\Me.Toolkit.Maui.WebHostPatch\Me.Toolkit.Maui.WebHostPatch.csproj" />
 	</ItemGroup>
 

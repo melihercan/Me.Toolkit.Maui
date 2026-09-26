@@ -162,9 +162,22 @@ display, an `x:Reference` or an `AncestorType`.
 - **Window and display sizes go through `LayoutUnits`**: on Mac Catalyst with the iPad idiom (MAUI's
   default) they are Mac points while layout is in iPad points, 1/0.77 as many. Measuring the root page
   instead was tried and fails - a `Shell` root reports no size.
-- **`Breakpoints` is a string** (`'600:50 1200:33'`, space-separated, window width in layout units) and
-  is refused alongside `Portrait`/`Landscape`. `Thickness` targets (`Margin`, `Padding`) get the value
-  on every side through a second `TypedBinding`.
+- **`Breakpoints` is a string** (`'600:50 1200:33'`, space-separated) compared against the window's
+  width, or the reference's with `BreakpointsBy=Reference`; refused alongside `Portrait`/`Landscape`.
+  `Thickness` targets get the value on the chosen `Sides` through a second `TypedBinding`.
+- **`Round=Pixels` needs the window's density** (`LayoutUnits.DensityOf`, a test hook, since
+  `Window.DisplayDensity` asks the platform) and re-rounds on `DisplayDensityChanged`.
+- **`To=Display` on Windows is the window's monitor** via WinUI `DisplayArea`, re-read as the window's
+  `X`/`Y` change. `IDisplaySize.SizeFor(Window)` is the seam.
+- **No Grid column/row support**, deliberately: a `ColumnDefinition` has nothing to measure, and a
+  percentage of its grid is star sizing.
+- **`SafeArea` reads platform insets** (`SafeArea.InsetsOf`, a test hook), `To=Window` only.
+- **`Me.Toolkit.Maui.Sizing.Analyzers`** (netstandard2.0, `Microsoft.CodeAnalysis.CSharp` 4.14.0 -
+  added with the owner's go-ahead) reads XAML additional files and reports `MTKS001`-`MTKS005`, all
+  warnings. It mirrors `RelativeSize`'s validation - change both together. It is packed into Sizing
+  under `analyzers/dotnet/cs` via a `ReferenceOutputAssembly="false"` project reference; the demo
+  consumes it with `OutputItemType="Analyzer"`. Diagnostic messages are format strings: double the
+  braces in `{me:Relative}`.
 - **Its tests are behavioural** and need `InlineDispatcher.Install()`: without a dispatcher, every
   binding update after the first throws.
 

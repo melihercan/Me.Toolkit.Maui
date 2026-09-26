@@ -601,6 +601,27 @@ public sealed class DisplaySizingTests : IDisposable
     }
 
     [Fact]
+    public void Moving_the_window_to_another_monitor_measures_that_monitor()
+    {
+        // Windows reports the monitor a window is on, and MAUI raises the window's X and Y as it is
+        // dragged. A second monitor sits to the right of the first, at x = 2560.
+        _display.Current = new Size(2560, 1440);
+        _display.SecondMonitor = new Size(1920, 1080);
+        _display.SecondMonitorFromX = 2560;
+
+        var label = new Label();
+        var window = InWindow(new Grid { label });
+        label.SetRelativeSize(Label.FontSizeProperty, new RelativeSize(5) { To = SizeReference.Display, Axis = SizeAxis.Shorter });
+        label.FontSize.Should().Be(72, "5% of the main monitor's 1440");
+
+        ((IWindow)window).FrameChanged(new Rect(2700, 100, 100, 100));
+        label.FontSize.Should().Be(54, "5% of the second monitor's 1080");
+
+        ((IWindow)window).FrameChanged(new Rect(100, 100, 100, 100));
+        label.FontSize.Should().Be(72, "and back");
+    }
+
+    [Fact]
     public void The_display_is_only_listened_to_while_the_element_is_in_a_window()
     {
         // DeviceDisplay's event is static. Subscribing an element that never reaches a window, or
@@ -623,6 +644,16 @@ public sealed class DisplaySizingTests : IDisposable
         private EventHandler? _changed;
 
         public Size? Current { get; set; }
+
+        /// <summary>
+        /// The display under a window, standing in for the monitor Windows reports it is on:
+        /// windows whose left edge is at or beyond this X are on the second monitor.
+        /// </summary>
+        public double SecondMonitorFromX { get; set; } = double.PositiveInfinity;
+
+        public Size? SecondMonitor { get; set; }
+
+        public Size? SizeFor(Window window) => window.X >= SecondMonitorFromX ? SecondMonitor : Current;
 
         public int Listeners => _changed?.GetInvocationList().Length ?? 0;
 

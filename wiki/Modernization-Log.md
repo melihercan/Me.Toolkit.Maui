@@ -752,6 +752,31 @@ rendered as 469.333, which is 704 pixels, and rounding near 100% can overshoot t
 unit. The documentation says so rather than promising sharper rendering. How a relative font
 combines with the system's text size is documented from MAUI's behaviour, not measured.
 
+That finding turned into `Round=Pixels`, and three more followed, tested on Windows while the
+platform run waits for the full set:
+
+- **`Round` became `None`/`Units`/`Pixels`.** `Pixels` rounds with the window's density: requested
+  591.3333 rendered 591.3333 — 887 pixels at 150% — where `Units` had been moved by a third of a
+  unit. It re-rounds on `DisplayDensityChanged`.
+- **`Sides`** puts a relative margin or padding on chosen sides only.
+- **`BreakpointsBy=Reference`** compares the reference's width, like a CSS container query.
+- **`To=Display` measures the window's own monitor on Windows**, through WinUI's `DisplayArea`.
+  Dragged between a 3840-wide landscape monitor and a 2160-wide portrait one, 5% of the display's
+  width read 128 and 72.
+
+Grid column and row sizes were considered and left out: a `ColumnDefinition` has nothing to measure
+against, and a percentage of its own grid is star sizing.
+
+Then a safe-area option and a build-time analyzer. `SafeArea=True` subtracts the notch and system
+bars from `To=Window`, read from each platform since MAUI reports them nowhere cross-platform; it is
+tested against a stand-in iPhone in landscape and awaits the device run. The analyzer,
+`Me.Toolkit.Maui.Sizing.Analyzers`, reads the app's XAML and reports five rules. It is the one
+package added in this phase — `Microsoft.CodeAnalysis.CSharp` 4.14.0, which an analyzer cannot do
+without — and it ships inside the Sizing package, whose only dependency is still MAUI. Two things it
+taught: MAUI's XAML compiler already errors on an unknown option name, so the analyzer earns its
+keep on what compiles and then fails at runtime; and diagnostic messages are format strings, so
+the braces in `{me:Relative}` have to be doubled — a test formats every message for that reason.
+
 ## Settled, and not to be reopened
 
 - **`26.9.8` is the version.** Date-based, matching Blazorme and Utilme. Publishing it closes the

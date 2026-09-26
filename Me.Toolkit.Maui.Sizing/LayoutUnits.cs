@@ -29,6 +29,15 @@ internal static class LayoutUnits
     internal static Size ToLayoutUnits(double width, double height) =>
         new(width / PointsPerUnit, height / PointsPerUnit);
 
+    /// <summary>
+    /// A window's display density: physical pixels per point. Settable so tests can supply one;
+    /// <see cref="Window.DisplayDensity"/> asks the platform, and is 1 without it.
+    /// </summary>
+    internal static Func<Window, double> DensityOf { get; set; } = static window => window.DisplayDensity;
+
+    /// <summary>Physical pixels per layout unit in a window, for rounding to whole pixels.</summary>
+    internal static double PixelsPerUnit(Window window) => DensityOf(window) * PointsPerUnit;
+
     private static double Platform()
     {
 #if MACCATALYST

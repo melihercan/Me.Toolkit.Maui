@@ -132,7 +132,7 @@ the truth. `MultiTargetingTests` asserts the file exists for every slice.
 
 ## The test suite
 
-238 tests in one project, all passing.
+288 tests in one project, all passing.
 
 | File | Covers |
 |---|---|
@@ -141,6 +141,7 @@ the truth. `MultiTargetingTests` asserts the file exists for every slice.
 | `ConfigurationTests` | `Me.Toolkit.Maui.Configuration`'s embedded-resource path: key flattening, the environment overlay, missing-file handling, argument validation. |
 | `HostingTests` | That MAUI's own host environment always says `Production`, and that `Me.Toolkit.Maui.Hosting` changes it by wrapping rather than assigning. |
 | `WebHostTests` | `IMeToolkitMauiWebHost`, by starting a real Kestrel on loopback and making real requests to it. |
+| `SizingAnalyzerTests` | The XAML analyzer: every rule fires on its mistake, correct XAML and the demo's own page produce nothing, and a run through the compiler reports in the `.xaml` and formats every message. |
 | `RelativeSizingTests` | `To=Self`, `Offset`, `RelativeSize.Parse` and the `RelativeSizing` attached properties, including through a real `Style`. |
 | `SizingTests`, `DisplaySizingTests` | `{me:Relative}` and `SetRelativeSize` on real elements, windows and runtime-loaded XAML: every reference, axis and clamp, re-parenting, leaving a window, and the refusals. The display is a stand-in behind `IDisplaySize`; an inline dispatcher stands in for the UI thread. |
 | `PublicApiSurfaceTests` | The whole public surface against `PublicApi.approved.txt`. |
@@ -219,6 +220,14 @@ checked by breaking the thing it guards:
 | Round after the clamp | 1 failure |
 | Stop breakpoints listening to the window | 6 failures |
 | Allow `Breakpoints` with `Portrait`/`Landscape` | 2 failures |
+| Round `Pixels` like `Units` | 3 failures |
+| Ignore `DisplayDensityChanged` | 1 failure |
+| Ignore `Sides` | 4 failures |
+| Ignore `BreakpointsBy` | 3 failures |
+| Stop following the window's position for `To=Display` | 1 failure |
+| Ignore `SafeArea` | 3 failures |
+| Analyzer: ignore nesting | 2 failures |
+| Analyzer: ignore the `Setter` | 2 failures |
 
 The suite is then run 30 times in a row against the restored tree, with no flakes.
 

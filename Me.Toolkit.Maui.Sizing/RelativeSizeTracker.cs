@@ -28,7 +28,7 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
     private bool _excludePadding;
     private Window? _window;
     private Window? _orientationWindow;
-    private bool _display;
+    private Window? _displayWindow;
     private double? _value;
 
     public RelativeSizeTracker(VisualElement element, RelativeSize size)
@@ -105,10 +105,15 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
                     break;
 
                 case SizeReference.Display:
-                    if (_element.Window is not null)
+                    // The display the window is on, so the window is followed too: moving it to
+                    // another monitor changes its position and, if that monitor is scaled
+                    // differently, its density.
+                    _displayWindow = _element.Window;
+                    if (_displayWindow is not null)
                     {
                         DisplaySize.Current.Changed += OnReferenceChanged;
-                        _display = true;
+                        _displayWindow.PropertyChanged += OnDisplayWindowPropertyChanged;
+                        _displayWindow.DisplayDensityChanged += OnDensityChanged;
                     }
 
                     break;
@@ -124,6 +129,7 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
             if (_orientationWindow is not null)
             {
                 _orientationWindow.SizeChanged += OnReferenceChanged;
+                _orientationWindow.DisplayDensityChanged += OnDensityChanged;
             }
         }
 
@@ -155,13 +161,16 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
         if (_orientationWindow is not null)
         {
             _orientationWindow.SizeChanged -= OnReferenceChanged;
+            _orientationWindow.DisplayDensityChanged -= OnDensityChanged;
             _orientationWindow = null;
         }
 
-        if (_display)
+        if (_displayWindow is not null)
         {
             DisplaySize.Current.Changed -= OnReferenceChanged;
-            _display = false;
+            _displayWindow.PropertyChanged -= OnDisplayWindowPropertyChanged;
+            _displayWindow.DisplayDensityChanged -= OnDensityChanged;
+            _displayWindow = null;
         }
     }
 
@@ -181,7 +190,10 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
 
     private void Update() =>
         Value = ReferenceSize() is { } size
-            ? _size.Resolve(size, _orientationWindow is { } w ? WindowSize(w) : null)
+            ? _size.Resolve(
+                size,
+                _orientationWindow is { } w ? WindowSize(w) : null,
+                _orientationWindow is { } d ? LayoutUnits.PixelsPerUnit(d) : 1)
             : null;
 
     // Window.Width and Height are in the platform's points, which on Mac Catalyst are not layout
@@ -199,11 +211,25 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
 
         if (_window is not null)
         {
-            return WindowSize(_window);
+            if (WindowSize(_window) is not { } window)
+            {
+                return null;
+            }
+
+            if (!_size.SafeArea)
+            {
+                return window;
+            }
+
+            var insets = Sizing.SafeArea.InsetsOf(_window);
+
+            return new Size(
+                Math.Max(0, window.Width - insets.HorizontalThickness),
+                Math.Max(0, window.Height - insets.VerticalThickness));
         }
 
         // The display, like the window, is reported in the platform's points; see LayoutUnits.
-        return _display && DisplaySize.Current.Current is { } display
+        return _displayWindow is not null && DisplaySize.Current.SizeFor(_displayWindow) is { } display
             ? LayoutUnits.ToLayoutUnits(display.Width, display.Height)
             : null;
     }
@@ -242,7 +268,27 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
         }
     }
 
-    private void OnReferenceChanged(object? sender, EventArgs e) => Update();
+    private void OnReferenceChanged(object? sender, EventArgs e)
+    {
+        Update();
+
+        // New insets can arrive just after the resize that brings them - a rotation - so look again.
+        if (_size.SafeArea && sender is Window)
+        {
+            _element.Dispatcher?.DispatchDelayed(TimeSpan.FromMilliseconds(150), Update);
+        }
+    }
+
+    private void OnDisplayWindowPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(Window.X) or nameof(Window.Y))
+        {
+            Update();
+        }
+    }
+
+    // Dragging a window to a monitor with a different scale changes its pixels, not its size.
+    private void OnDensityChanged(object? sender, DisplayDensityChangedEventArgs e) => Update();
 
     private void OnReferencePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

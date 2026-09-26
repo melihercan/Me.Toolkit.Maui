@@ -50,8 +50,17 @@ public sealed class RelativeExtension : IMarkupExtension<BindingBase>
     /// </summary>
     public string? Breakpoints { get; set; }
 
-    /// <summary>Rounds the result to whole units. See <see cref="RelativeSize.Round"/>.</summary>
-    public bool Round { get; set; }
+    /// <summary>How the result is rounded: <c>Units</c> or <c>Pixels</c>. See <see cref="RelativeSize.Round"/>.</summary>
+    public SizeRounding Round { get; set; }
+
+    /// <summary>Which sides of a margin or padding get the value. See <see cref="RelativeSize.Sides"/>.</summary>
+    public ThicknessSides Sides { get; set; } = ThicknessSides.All;
+
+    /// <summary>What breakpoints compare against. See <see cref="RelativeSize.BreakpointsBy"/>.</summary>
+    public BreakpointSource BreakpointsBy { get; set; } = BreakpointSource.Window;
+
+    /// <summary>With <c>To=Window</c>, leave out the notch and system bars. See <see cref="RelativeSize.SafeArea"/>.</summary>
+    public bool SafeArea { get; set; }
 
     /// <summary>What the size is a percentage of. Defaults to <see cref="SizeReference.Parent"/>.</summary>
     public SizeReference To { get; set; } = SizeReference.Parent;
@@ -110,6 +119,9 @@ public sealed class RelativeExtension : IMarkupExtension<BindingBase>
             Offset = Offset,
             Breakpoints = Breakpoints,
             Round = Round,
+            Sides = Sides,
+            BreakpointsBy = BreakpointsBy,
+            SafeArea = SafeArea,
             To = To,
             Axis = Axis,
             Min = Min,
