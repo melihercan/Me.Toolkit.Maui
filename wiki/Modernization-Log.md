@@ -730,12 +730,19 @@ done by hand, later, and the notes are baked into the package for good.
 
 ## What is still open
 
-- **The NuGet Trusted Publishing policy.** It does not exist yet, and it has to, before the first
-  tag is pushed — the run will otherwise do everything correctly and fail at the final step. See
-  [Publishing](Publishing) for the exact fields.
+Closed since this list was first written: the Trusted Publishing policy exists and has published
+every release since `26.9.9`; `Me.Toolkit.Maui.Sizing` was added and published; the wiki publishes
+itself from `wiki/`.
+
+- **The `Me.Toolkit.Maui.*` prefix reservation.** Not yet requested; it is an email from the owner to
+  nuget.org. See [Publishing](Publishing#reserving-the-prefix).
+- **Unlisting the 1.0.0.0 releases.** `26.9.14` of Configuration, Hosting and WebHostPatch and
+  Sizing's `26.9.26` are superseded by `26.9.27` but still listed. Deferred by decision; done by hand
+  on nuget.org.
 - **`Me.Toolkit.Maui.Nfc`.** Unfinished, unpublished, and never exercised against a physical tag. The
   Android foreground-dispatch path and the CoreNFC session have no behavioural coverage; the demo's
   NFC tab renders but has not been used to read anything.
 - **iOS and Mac Catalyst at runtime.** The library slices compile on Windows CI, but no app has been
-  built, signed or run on either. `Me.Toolkit.Maui.WebHostPatch`'s note that iOS stops a backgrounded server
+  built, signed or run on either — `Me.Toolkit.Maui.Sizing` included, which has run on Windows and an
+  Android phone only. `Me.Toolkit.Maui.WebHostPatch`'s note that iOS stops a backgrounded server
   is inherited from the Xamarin era and unverified here.

@@ -1,0 +1,55 @@
+name: Wiki
+
+# Publishes wiki/ to the GitHub wiki, which is a separate git repository (<repo>.wiki.git) that
+# nothing else updates. It was copied by hand before this, and fell behind the repository more than
+# once: pages describing a library the live wiki had never heard of, and a publishing rule that had
+# already been retired.
+#
+# wiki/ is the source of truth, reviewed with the code it describes, so the wiki is made to match it
+# exactly - a page deleted from wiki/ is deleted from the wiki too. Edits made directly on GitHub are
+# overwritten by the next change to wiki/; make them here instead.
+on:
+  push:
+    branches: [master]
+    paths: ['wiki/**']
+  workflow_dispatch:
+
+concurrency:
+  group: wiki
+  cancel-in-progress: false
+
+permissions:
+  # The wiki is part of the repository as far as GITHUB_TOKEN is concerned; contents: write is what
+  # lets it push there. Nothing else is written.
+  contents: write
+
+jobs:
+  publish:
+    name: Publish wiki/
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Mirror wiki/ into the wiki repository
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git clone --quiet "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki-repo
+
+          rsync --archive --delete --exclude .git wiki/ wiki-repo/
+
+          cd wiki-repo
+          git add --all
+          if git diff --cached --quiet; then
+            echo "The wiki already matches wiki/ at ${GITHUB_SHA::7}."
+            exit 0
+          fi
+
+          git diff --cached --stat
+          git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit --quiet -m "Publish wiki/ from ${GITHUB_SHA::7}"
+          git push --quiet origin HEAD
+          echo "Published wiki/ from ${GITHUB_SHA::7}."

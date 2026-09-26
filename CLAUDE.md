@@ -24,6 +24,8 @@ publishing.
 - `DemoApp/` — one MAUI app with a tab per library. **In the solution, deliberately out of CI**,
   which is why `ci.yml` names the four library projects rather than building the solution.
 - `.github/workflows/ci.yml` — build and test, with `-warnaserror` on the build step only.
+- `.github/workflows/wiki.yml` — mirrors `wiki/` to the GitHub wiki on every change to it on master.
+  Edit the pages in `wiki/`; a direct edit on GitHub is overwritten.
 - `wiki/` — [Home](wiki/Home.md), [Building and Testing](wiki/Building-and-Testing.md),
   [Design Notes](wiki/Design-Notes.md), [Modernization Log](wiki/Modernization-Log.md).
 

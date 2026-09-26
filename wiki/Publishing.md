@@ -5,6 +5,9 @@ Packaging is done by GitHub Actions, in `.github/workflows/`.
 - **`ci.yml`** — build and test on every push and PR to master. Builds with `-warnaserror`, so the
   repository's zero-warning bar is enforced there, and a new NuGet advisory fails the build.
 - **`publish.yml`** — **one workflow for every package, deliberately.**
+- **`wiki.yml`** — publishes `wiki/` to the GitHub wiki whenever it changes on master, mirroring it
+  exactly. The wiki is a separate repository nothing else updates, and copying it by hand let it
+  fall behind. Edit pages here, not on GitHub: a direct edit is overwritten by the next publish.
 
 ## One workflow, on purpose
 
@@ -103,8 +106,17 @@ costs a release run, and any ordinary English word is a gamble. Everything — r
 projects, assemblies, namespaces, types and package IDs — carries the same name, so there is nothing
 to keep in step.
 
-`Me.*` is not yet prefix-reserved. Requesting that reservation would give the verified badge and
-stop anyone else taking `Me.Something`; it is worth doing now that something is published under it.
+### Reserving the prefix
+
+A reservation would give the packages nuget.org's verified badge and stop anyone else publishing
+under the prefix. It is requested by email to `account@nuget.org` from the owner — there is no form
+or API — naming the nuget.org owner and the prefix.
+
+The prefix to request is **`Me.Toolkit.Maui.*`**, not `Me.*`. nuget.org's
+[criteria](https://learn.microsoft.com/en-us/nuget/nuget-org/id-prefix-reservation#id-prefix-reservation-criteria)
+ask applicants to avoid prefixes shorter than four characters and common or generic words, and
+`Me` is both; an earlier version of this page recommended it without having read them.
+`Me.Toolkit.Maui.*` is specific, identifies this project, and covers every package it publishes.
 
 ## This must run on Windows
 
