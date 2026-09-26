@@ -4,7 +4,7 @@ Packaging is done by GitHub Actions, in `.github/workflows/`.
 
 - **`ci.yml`** — build and test on every push and PR to master. Builds with `-warnaserror`, so the
   repository's zero-warning bar is enforced there, and a new NuGet advisory fails the build.
-- **`publish.yml`** — **one workflow for all three packages, deliberately.**
+- **`publish.yml`** — **one workflow for every package, deliberately.**
 
 ## One workflow, on purpose
 
@@ -20,16 +20,24 @@ per file.
 | tag `v<version>` | every package |
 | tag `configuration-v<version>` | `Me.Toolkit.Maui.Configuration` only |
 | tag `hosting-v<version>` | `Me.Toolkit.Maui.Hosting` only |
+| tag `sizing-v<version>` | `Me.Toolkit.Maui.Sizing` only |
 | tag `webhostpatch-v<version>` | `Me.Toolkit.Maui.WebHostPatch` only |
 | manual run | defaults to a **dry run** that packs and uploads the `.nupkg` files as artifacts without publishing |
 
-The workflow verifies the tag matches each project's `<Version>`, runs the tests, and packs with
-`--no-build`, so what is published is exactly what the tests ran against.
+The workflow takes the version from the tag, builds and tests with it, and packs with `--no-build`,
+so what is published is exactly what the tests ran against.
 
 A tag push does **not** pass `--skip-duplicate`. That flag is for deliberately re-running a release
 that is already out, and it cannot distinguish that from a refusal — the first attempt to publish
 these packages was rejected three times with `409 The package ID is reserved` and reported success,
 because that is a 409 like any other. Only a manual run can ask for it.
+
+## `Me.Toolkit.Maui.Sizing` creates a new package ID
+
+It has a trigger and is in the `v<version>` set, but has never been pushed. Its first push creates
+the `Me.Toolkit.Maui.Sizing` ID, which only the Trusted Publishing policy's **"Push new packages and
+package versions"** scope allows — see [The policy](#the-policy). A `v<version>` tag now publishes
+all four packages; tag `sizing-v<version>` to release it alone.
 
 ## `Me.Toolkit.Maui.Nfc` is not published
 
@@ -101,17 +109,26 @@ prefix, because the platform versions are stamped in — `net10.0-android36.0`,
 `net10.0-windows10.0.19041`. Treat that step as the real rule and the `runs-on` line as its
 consequence.
 
-## Tag with the csproj spelling
+## The tag is the version
 
-The projects declare `<Version>26.09.09</Version>` and NuGet normalises that to `26.9.9`. The
-verification step compares against the **raw csproj text**, so the tag is:
+No project declares a `<Version>`. The tag is the only place a version is written, and the workflow
+passes it to both the build and the pack — the build too, because packing uses `--no-build`, and
+without it the assemblies would be stamped 1.0.0 inside a package claiming the real version.
+
+Write the tag either way:
 
 ```
-v26.09.09
+v26.09.26     or     v26.9.26
 ```
 
-not `v26.9.9`. Tagging the normalised form fails the version check — which is the point: it is the
-same check that catches tagging a version no project declares.
+Both publish **26.9.26**. NuGet strips leading zeros, so the workflow normalises the tag before
+building and says so in a notice when it had to; the readable spelling is allowed because a date
+reads better with the zeros in. A manual run has no tag and uses today's date in the normalised form
+— what a tag cut today would give — rather than the silent 1.0.0 a missing version would produce.
+
+This replaced a check that the tag matched each csproj's raw `<Version>` text. Four csprojs saying
+`26.09.09`, a tag that had to say the same, and nuget.org showing `26.9.9` were three spellings of one
+fact, and one of them was guaranteed to disagree with what shipped.
 
 ## Trusted Publishing, not an API key
 
@@ -190,8 +207,9 @@ itself, and is worth doing once before the first real tag.
 
 ## Versioning
 
-Date-based: `26.09.09`, normalised by NuGet to `26.9.9`, matching the convention used across these
-repositories. Bump `<Version>` in each `.csproj` together with its `<PackageReleaseNotes>`.
+Date-based — `26.9.26` for the 26th of September 2026 — matching the convention used across these
+repositories. The version comes from the tag; update each released package's
+`<PackageReleaseNotes>` before tagging.
 
 `AssemblyVersion` and `FileVersion` are left to derive from `Version` rather than being set
 separately, so they cannot drift.

@@ -133,7 +133,8 @@ way.
 
 ## Me.Toolkit.Maui.Sizing
 
-New, not a port, and **not published** — no tag in `publish.yml` packs it. Relative sizes:
+New, not a port, and **not published yet** — `sizing-v*` and `v*` tags pack it; its first push
+creates the package ID. Relative sizes:
 `{me:Relative 30}` in XAML, `SetRelativeSize` in code, against the parent (less padding), window,
 display, an `x:Reference` or an `AncestorType`.
 
@@ -174,14 +175,13 @@ build must not drop a `.nupkg` into `bin/`, which is what Xamarinme did at versi
 published.
 
 Shared identity (authors, copyright, licence, icon, readme, URLs) lives in `Directory.Build.props`
-under the same project-name condition as documentation generation. `Version`, `Product`,
-`Description`, `PackageTags` and `PackageReleaseNotes` stay per project so the four can move
-independently. `AssemblyVersion`/`FileVersion` derive from `Version` — never pin them, which is the
+under the same project-name condition as documentation generation. `Product`, `Description`,
+`PackageTags` and `PackageReleaseNotes` stay per project so the packages can move independently. `AssemblyVersion`/`FileVersion` derive from `Version` — never pin them, which is the
 Xamarinme.Configuration defect.
 
-Versions are date-based: `<Version>26.09.09</Version>`, which NuGet normalises to `26.9.9`. When
-publishing lands, **tag with the csproj spelling** (`v26.09.09`), because the version check compares
-raw csproj text.
+Versions are date-based, and **no csproj declares one: the tag is the version.** `publish.yml`
+normalises it (`v26.09.26` → `26.9.26`) and passes it to both build and pack — the build too, since
+it packs with `--no-build`. Do not add `<Version>` back.
 
 Verify a packaging change by **unzipping the `.nupkg`**, not by reading the build log.
 
@@ -247,8 +247,8 @@ default.
 ## Test stack
 
 xUnit v3 4.0.0, NSubstitute 6.2.0, `System.Reflection.MetadataLoadContext` 10.0.0, and
-**FluentAssertions pinned to 7.x** — 8.x requires payment for commercial use. Do not let a tool bump
-it.
+**AwesomeAssertions** — the Apache-2.0 fork of FluentAssertions 7.2.2, since FluentAssertions 8
+requires payment for commercial use. Do not let a tool swap it back.
 
 `TestAssets/**/*.json` are embedded resources, because `Xamarinme.Configuration` reads
 `{Prefix}.appsettings.json` out of an assembly's manifest resources and there is no other way to

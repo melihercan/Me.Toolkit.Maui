@@ -643,7 +643,7 @@ every size; the window-relative font held at its `Max` of 40 and its `Min` of 12
 display's shorter side read 216, which is 15% of 1440 — a 4K monitor at 150% — so the
 pixel-to-device-independent conversion is right. iOS and Android are compile-verified only.
 
-Not published: no tag packs it yet.
+Not published at first; the `sizing-v*` trigger was added once it had run on a phone.
 
 `Portrait` and `Landscape` followed, for a different percentage per orientation. Orientation is the
 window's shape rather than the reference's — a card is landscape-shaped on a portrait phone — and

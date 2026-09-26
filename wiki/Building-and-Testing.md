@@ -113,10 +113,11 @@ configuration first. `dotnet test` at solution level does this for you. The look
 configuration-aware, so a stale `Release` build cannot shadow a fresh `Debug` one by having a newer
 timestamp.
 
-### FluentAssertions is pinned to 7.x
+### AwesomeAssertions, not FluentAssertions
 
-Version 8 moved to a licence that requires payment for commercial use; 7.x is the last Apache-2.0
-release. The pin is deliberate — do not let a tool bump it.
+FluentAssertions 8 moved to a licence that requires payment for commercial use. The tests use
+**AwesomeAssertions**, the fork of 7.2.2 — the last Apache-2.0 release — with the same API. Do not
+let a tool swap it back.
 
 ## `Directory.Build.props` and `.targets`
 
@@ -229,7 +230,7 @@ match what was on nuget.org.
 
 Shared identity — authors, copyright, licence, icon, readme, URLs — lives in
 `Directory.Build.props`, under the same project-name condition as documentation generation. What
-differs per package — `Version`, `Product`, `Description`, `PackageTags`, `PackageReleaseNotes` —
+differs per package — `Product`, `Description`, `PackageTags`, `PackageReleaseNotes` —
 stays in the csproj, so the four can be versioned and described independently.
 
 `AssemblyVersion` and `FileVersion` are left to derive from `Version`. Xamarinme.Configuration
@@ -238,11 +239,10 @@ identity to the binder.
 
 ### Versions are date-based
 
-The projects declare `<Version>26.09.09</Version>` and **NuGet normalises that to `26.9.9`**, which
-is what the file is called. It matches Blazorme and Utilme.
-
-When publishing lands, **tag with the csproj spelling** — `v26.09.09`, not `v26.9.7`-style
-normalised text — because the version check compares against the raw csproj string.
+No project declares a version: **the tag is the version**, passed to the build and the pack by
+`publish.yml`. `v26.09.26` and `v26.9.26` both publish `26.9.26`, the form NuGet stores. It matches
+Blazorme and Utilme. A local `dotnet pack` takes `-p:Version=26.9.26`; without one the package is
+1.0.0. See [Publishing](Publishing).
 
 ### What is in a package
 
