@@ -808,6 +808,13 @@ On the iPhone, the notch: 10% of the landscape width read 90, and 80 with `SafeA
 on each side. Values were read off the phone through a mirror, since iOS will not screenshot
 remotely without a root-owned tunnel.
 
+Released as **26.9.28**. The first publish run failed at its build step, before anything was
+pushed: publish.yml builds the test project with `-warnaserror` and the analyzer test had two
+`xUnit1051` warnings that CI's lenient test build had let through. CI now builds the test project as
+strictly; the unreleased tag was moved to the fix. What nuget.org served was then unzipped: all
+five `lib` assemblies and the analyzer at 26.9.28.0, the analyzer under `analyzers/dotnet/cs`, and
+`Microsoft.Maui.Controls` still the only dependency.
+
 ## Settled, and not to be reopened
 
 - **`26.9.8` is the version.** Date-based, matching Blazorme and Utilme. Publishing it closes the

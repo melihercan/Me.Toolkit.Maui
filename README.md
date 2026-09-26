@@ -3,7 +3,7 @@
 Libraries and plugins for .NET MAUI applications, ported from
 [Xamarinme](https://github.com/melihercan/Xamarinme) now that Xamarin is retired.
 
-**Four of the five are published at `26.9.27`** — `Me.Toolkit.Maui.Configuration`,
+**Four of the five are published** — Sizing at `26.9.28`, the other three at `26.9.27` — `Me.Toolkit.Maui.Configuration`,
 `Me.Toolkit.Maui.Hosting`, `Me.Toolkit.Maui.Sizing` and `Me.Toolkit.Maui.WebHostPatch`.
 `Me.Toolkit.Maui.Nfc` is ported and tested but held back: its reading session is unfinished and has
 never been used against a tag. `Me.Toolkit.Maui.Sizing` is new rather than ported.
@@ -23,7 +23,7 @@ dotnet build DemoApp/DemoApp.csproj -f net10.0-windows10.0.19041.0
 | [`Me.Toolkit.Maui.Hosting`](https://www.nuget.org/packages/Me.Toolkit.Maui.Hosting) | `Xamarinme.Hosting` 1.0.3 | **26.9.27** |
 | [`Me.Toolkit.Maui.WebHostPatch`](https://www.nuget.org/packages/Me.Toolkit.Maui.WebHostPatch) | `Xamarinme.WebHostPatch` 1.0.0 | **26.9.27** — no patch needed on .NET 10 |
 | `Me.Toolkit.Maui.Nfc` | `Xamarinme.Nfc` (never published) | Not published — ported, but the reading session is unfinished |
-| [`Me.Toolkit.Maui.Sizing`](https://www.nuget.org/packages/Me.Toolkit.Maui.Sizing) | nothing — new | **26.9.27** — relative sizes: `WidthRequest="{me:Relative 30}"` is 30% of the parent |
+| [`Me.Toolkit.Maui.Sizing`](https://www.nuget.org/packages/Me.Toolkit.Maui.Sizing) | nothing — new | **26.9.28** — relative sizes: `WidthRequest="{me:Relative 30}"` is 30% of the parent |
 
 The IDs are prefixed because nuget.org reserves any package ID beginning with `Maui`; the repository
 was called Mauime. See [Publishing](https://github.com/melihercan/Me.Toolkit.Maui/wiki/Publishing).

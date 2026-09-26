@@ -3,7 +3,7 @@
 Libraries and plugins for .NET MAUI applications, ported from
 [Xamarinme](https://github.com/melihercan/Xamarinme) now that Xamarin is retired.
 
-**Four of the five are published at `26.9.27`**, verified by unzipping what nuget.org serves.
+**Four of the five are published** — Sizing at `26.9.28`, Configuration, Hosting and WebHostPatch at `26.9.27` — each verified by unzipping what nuget.org serves.
 `26.9.8` is unlisted: it shipped the right package ID around assemblies still called `Mauime.*`.
 `26.9.14` and Sizing's `26.9.26` shipped a `net10.0` assembly stamped `1.0.0.0`; see
 [Publishing](Publishing). `Me.Toolkit.Maui.Nfc` is held back as unfinished —
@@ -24,7 +24,7 @@ between IDs.
 | [`Me.Toolkit.Maui.Configuration`](https://www.nuget.org/packages/Me.Toolkit.Maui.Configuration) | [`Xamarinme.Configuration`](https://www.nuget.org/packages/Xamarinme.Configuration) 1.0.2 | **Published** 26.9.27 |
 | [`Me.Toolkit.Maui.Hosting`](https://www.nuget.org/packages/Me.Toolkit.Maui.Hosting) | [`Xamarinme.Hosting`](https://www.nuget.org/packages/Xamarinme.Hosting) 1.0.3 | **Published** 26.9.27 |
 | [`Me.Toolkit.Maui.WebHostPatch`](https://www.nuget.org/packages/Me.Toolkit.Maui.WebHostPatch) | [`Xamarinme.WebHostPatch`](https://www.nuget.org/packages/Xamarinme.WebHostPatch) 1.0.0 | **Published** 26.9.27 — no patch needed on .NET 10 |
-| [`Me.Toolkit.Maui.Sizing`](https://www.nuget.org/packages/Me.Toolkit.Maui.Sizing) | nothing — new, not a port | **Published** 26.9.27 — relative sizes (`{me:Relative 30}`), verified on Windows, Android, Mac Catalyst and iOS |
+| [`Me.Toolkit.Maui.Sizing`](https://www.nuget.org/packages/Me.Toolkit.Maui.Sizing) | nothing — new, not a port | **Published** 26.9.28 — relative sizes (`{me:Relative 30}`), verified on Windows, Android, Mac Catalyst and iOS |
 
 The repository was called Mauime. It is not, because nuget.org rejects any package ID beginning with
 `Maui` as reserved — see [Publishing](Publishing) for what that took to establish.

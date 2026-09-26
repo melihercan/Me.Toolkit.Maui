@@ -9,7 +9,7 @@ A port of [Xamarinme](https://github.com/melihercan/Xamarinme) to .NET MAUI. Xam
 this is a port, not a framework bump: new repository, fresh git history, **new package IDs**
 (`Me.Toolkit.Maui.*`), and a per-library question of whether the library should exist at all.
 
-**Four of the five are published at `26.9.27`; `Me.Toolkit.Maui.Nfc` is held back.** The work is phased, one commit per phase on `master`, and each phase
+**Four of the five are published — Sizing at `26.9.28`, the rest at `26.9.27`; `Me.Toolkit.Maui.Nfc` is held back.** The work is phased, one commit per phase on `master`, and each phase
 needs a go-ahead. Phases 0 (characterization), 1 (the MAUI skeleton), 2 (`Me.Toolkit.Maui.Nfc`), 3 (the other
 three libraries) and 4 (retiring `legacy/`, adding CI) are done. **All four libraries are ported and
 the build is clean under `-warnaserror`.** What remains is the demo app, package metadata, and
@@ -135,7 +135,7 @@ way.
 
 ## Me.Toolkit.Maui.Sizing
 
-New, not a port, **published at 26.9.27** — `sizing-v*` and `v*` tags pack it. Relative sizes:
+New, not a port, **published at 26.9.28** — `sizing-v*` and `v*` tags pack it. Relative sizes:
 `{me:Relative 30}` in XAML, `SetRelativeSize` in code, against the parent (less padding), window,
 display, an `x:Reference` or an `AncestorType`.
 
