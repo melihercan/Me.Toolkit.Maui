@@ -181,12 +181,12 @@ public class SizingAnalyzerTests
             </VerticalStackLayout>
             """);
 
-        var compilation = CSharpCompilation.Create("App", [CSharpSyntaxTree.ParseText("class C {}")]);
+        var compilation = CSharpCompilation.Create("App", [CSharpSyntaxTree.ParseText("class C {}", cancellationToken: TestContext.Current.CancellationToken)]);
         var options = new AnalyzerOptions([new InMemoryText("MainPage.xaml", xaml), new InMemoryText("notes.txt", xaml)]);
 
         var diagnostics = await compilation
             .WithAnalyzers([new RelativeXamlAnalyzer()], options)
-            .GetAnalyzerDiagnosticsAsync();
+            .GetAnalyzerDiagnosticsAsync(TestContext.Current.CancellationToken);
 
         diagnostics.Select(d => d.Id).Should().BeEquivalentTo(["MTKS001", "MTKS002", "MTKS003", "MTKS004", "MTKS005"]);
         diagnostics.Should().OnlyContain(d => d.Location.GetLineSpan().Path == "MainPage.xaml", "only .xaml files are read");

@@ -41,12 +41,16 @@ jobs:
       # it ships. The cost is that this list has to be kept in step with the libraries, which
       # MultiTargetingTests will notice, since it enumerates them.
       #
+      # The test project is built here as strictly as the libraries, because publish.yml builds it that
+      # way too: sizing-v26.09.28's first publish run failed on two xUnit1051 warnings in a test that
+      # this job had built leniently and passed.
+      #
       # -warnaserror is the zero-warning bar, and also turns a new NuGet advisory (NU1902/NU1904)
       # into a build failure. That could not be set while legacy/ existed.
       - name: Build libraries
         shell: pwsh
         run: |
-          foreach ($project in 'Me.Toolkit.Maui.Configuration','Me.Toolkit.Maui.Hosting','Me.Toolkit.Maui.Nfc','Me.Toolkit.Maui.Sizing','Me.Toolkit.Maui.WebHostPatch') {
+          foreach ($project in 'Me.Toolkit.Maui.Configuration','Me.Toolkit.Maui.Hosting','Me.Toolkit.Maui.Nfc','Me.Toolkit.Maui.Sizing','Me.Toolkit.Maui.WebHostPatch','Me.Toolkit.Maui.Tests') {
             dotnet build "$project/$project.csproj" --configuration Release -warnaserror
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
