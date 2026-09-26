@@ -26,7 +26,7 @@ public class SizingTests
     public SizingTests() => InlineDispatcher.Install();
 
     private static void Arrange(VisualElement element, double width, double height) =>
-        ((IView)element).Arrange(new Rect(0, 0, width, height));
+        ((IView)Alive.Keep(element)).Arrange(new Rect(0, 0, width, height));
 
     private static (Grid Parent, BoxView Child) ParentAndChild(double width = 400, double height = 200)
     {
@@ -39,7 +39,7 @@ public class SizingTests
 
     private static Window InWindow(View content, double width, double height)
     {
-        var window = new Window(new ContentPage { Content = content });
+        var window = Alive.Keep(new Window(new ContentPage { Content = content }));
         Resize(window, width, height);
 
         return window;
@@ -536,7 +536,7 @@ public sealed class DisplaySizingTests : IDisposable
             _display.Current = new Size(1920, 1080);
 
             var label = new Label();
-            var window = new Window(new ContentPage { Content = new Grid { label } });
+            var window = Alive.Keep(new Window(new ContentPage { Content = new Grid { label } }));
             ((IWindow)window).FrameChanged(new Rect(0, 0, 1024, 768));
 
             // Round=None: this is about the conversion's arithmetic, which whole units would hide.
@@ -562,7 +562,7 @@ public sealed class DisplaySizingTests : IDisposable
 
     private static Window InWindow(View content)
     {
-        var window = new Window(new ContentPage { Content = content });
+        var window = Alive.Keep(new Window(new ContentPage { Content = content }));
         ((IWindow)window).FrameChanged(new Rect(0, 0, 100, 100));
 
         return window;
@@ -669,6 +669,32 @@ public sealed class DisplaySizingTests : IDisposable
             Current = new Size(Current!.Value.Height, Current.Value.Width);
             _changed?.Invoke(this, EventArgs.Empty);
         }
+    }
+}
+
+/// <summary>
+/// Holds what a test builds for as long as the test process runs.
+/// </summary>
+/// <remarks>
+/// MAUI holds a child's parent through a weak reference, so a parent nothing else references can be
+/// collected out from under its child. An app's page tree holds every parent; a test that builds a
+/// <c>Grid</c> around an element and keeps only the element does not, and CI caught it: a Release run
+/// under parallel load collected the grid before the relative size was applied, and the size read -1.
+/// Every element a test arranges, and every window it opens, is kept here.
+/// </remarks>
+internal static class Alive
+{
+    private static readonly List<object> Roots = [];
+
+    public static T Keep<T>(T value)
+        where T : class
+    {
+        lock (Roots)
+        {
+            Roots.Add(value);
+        }
+
+        return value;
     }
 }
 

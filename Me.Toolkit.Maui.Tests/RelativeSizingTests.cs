@@ -25,7 +25,7 @@ public class RelativeSizingTests
         + "xmlns:me=\"https://github.com/melihercan/Me.Toolkit.Maui\"";
 
     private static void Arrange(VisualElement element, double width, double height) =>
-        ((IView)element).Arrange(new Rect(0, 0, width, height));
+        ((IView)Alive.Keep(element)).Arrange(new Rect(0, 0, width, height));
 
     private static BoxView ChildOf(double width, double height)
     {
@@ -169,7 +169,7 @@ public class RelativeSizingTests
         // breakpoint, not the reference.
         var child = new BoxView();
         var parent = new Grid { child };
-        var window = new Window(new ContentPage { Content = parent });
+        var window = Alive.Keep(new Window(new ContentPage { Content = parent }));
         ((IWindow)window).FrameChanged(new Rect(0, 0, width, 800));
         Arrange(parent, 1000, 100);
 
@@ -253,6 +253,23 @@ public class RelativeSizingTests
     }
 
     [Fact]
+    public void A_parent_built_by_a_helper_survives_a_collection()
+    {
+        // MAUI holds a child's parent weakly. CI once collected the Grid ChildOf builds between the
+        // helper returning and the size being applied, and a size read -1 - reproduced by collecting
+        // exactly here. Alive.Keep in Arrange is what holds it; this is the deterministic version of
+        // what CI hit by chance.
+        var child = ChildOf(100, 100);
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+
+        child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(33.3));
+
+        child.WidthRequest.Should().Be(33);
+    }
+
+    [Fact]
     public void Sizes_are_whole_units_unless_asked_otherwise()
     {
         // The default, because a size of 300.444 is noise to whoever reads it; Pixels and None are
@@ -280,7 +297,7 @@ public class RelativeSizingTests
     {
         var child = new BoxView();
         var parent = new Grid { child };
-        var window = new Window(new ContentPage { Content = parent });
+        var window = Alive.Keep(new Window(new ContentPage { Content = parent }));
         ((IWindow)window).FrameChanged(new Rect(0, 0, 2000, 1000));
         Arrange(parent, parentWidth, 100);
 
@@ -371,7 +388,7 @@ public class RelativeSizingTests
         // An iPhone XR on its side: 896 x 414 points, the notch's 44 on both sides - iOS reports it
         // on each - and the home indicator's 21 at the bottom.
         var label = new Label();
-        var window = new Window(new ContentPage { Content = new Grid { label } });
+        var window = Alive.Keep(new Window(new ContentPage { Content = new Grid { label } }));
         ((IWindow)window).FrameChanged(new Rect(0, 0, 896, 414));
 
         return label;
@@ -414,7 +431,7 @@ public class RelativeSizingTests
                   <BoxView x:Name="Box" WidthRequest="{me:Relative 50, To=Window, SafeArea=True}" />
                 </Grid>
                 """);
-            var window = new Window(new ContentPage { Content = grid });
+            var window = Alive.Keep(new Window(new ContentPage { Content = grid }));
             ((IWindow)window).FrameChanged(new Rect(0, 0, 896, 414));
 
             grid.FindByName<BoxView>("Box").WidthRequest.Should().Be(404);
@@ -501,7 +518,7 @@ public class RelativeSizingTests
                            Margin="{me:Relative 2, Sides=Horizontal}" />
                 </Grid>
                 """);
-            var window = new Window(new ContentPage { Content = grid });
+            var window = Alive.Keep(new Window(new ContentPage { Content = grid }));
             ((IWindow)window).FrameChanged(new Rect(0, 0, 400, 800));
             Arrange(grid, 1340, 100);
 
@@ -519,7 +536,7 @@ public class RelativeSizingTests
               <BoxView x:Name="Box" WidthRequest="{me:Relative 33.3, Breakpoints='600:50 1200:25', Round=Units}" Margin="{me:Relative 2}" />
             </Grid>
             """);
-        var window = new Window(new ContentPage { Content = grid });
+        var window = Alive.Keep(new Window(new ContentPage { Content = grid }));
         ((IWindow)window).FrameChanged(new Rect(0, 0, 500, 800));
         Arrange(grid, 1000, 100);
 

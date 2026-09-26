@@ -796,6 +796,14 @@ tests and Windows could not:
 - **Decimals nobody wanted.** A 15.4 font and a 300.444 width prompted the owner to ask what they
   were for. Whole units are now the default.
 
+CI then failed one test the local runs never had: a size expected to be 33 read -1, "differed by
+34". Not rounding — -1 is an unset `WidthRequest`. MAUI holds a child's parent weakly, and a test
+helper built a `Grid` around an element and kept only the element; under CI's parallel load a
+collection landed between the helper returning and the size being applied, and the grid was gone.
+Reproduced by collecting at exactly that point, which gave CI's message word for word. The test
+helpers now keep everything they arrange, and a test collects there on purpose. An app is not
+affected: its page tree holds every parent.
+
 On the iPhone, the notch: 10% of the landscape width read 90, and 80 with `SafeArea` — 896 less 48
 on each side. Values were read off the phone through a mirror, since iOS will not screenshot
 remotely without a root-owned tunnel.

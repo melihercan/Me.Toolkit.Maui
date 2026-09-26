@@ -132,7 +132,7 @@ the truth. `MultiTargetingTests` asserts the file exists for every slice.
 
 ## The test suite
 
-289 tests in one project, all passing.
+290 tests in one project, all passing.
 
 | File | Covers |
 |---|---|
