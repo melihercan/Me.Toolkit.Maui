@@ -3,7 +3,7 @@
 Libraries and plugins for .NET MAUI applications, ported from
 [Xamarinme](https://github.com/melihercan/Xamarinme) now that Xamarin is retired.
 
-**Three of the four are published at `26.9.9`**, verified by unzipping what nuget.org serves.
+**Three of the five are published at `26.9.9`**, verified by unzipping what nuget.org serves.
 `26.9.8` is unlisted: it shipped the right package ID around assemblies still called `Mauime.*`. `Me.Toolkit.Maui.Nfc` is held back as unfinished —
 it builds and is tested, but its reading session has never been used against a physical tag. See
 [Publishing](Publishing). `DemoApp/` is a single MAUI app with a tab per library, replacing Xamarinme's three
@@ -22,11 +22,12 @@ between IDs.
 | [`Me.Toolkit.Maui.Configuration`](https://www.nuget.org/packages/Me.Toolkit.Maui.Configuration) | [`Xamarinme.Configuration`](https://www.nuget.org/packages/Xamarinme.Configuration) 1.0.2 | **Published** 26.9.9 |
 | [`Me.Toolkit.Maui.Hosting`](https://www.nuget.org/packages/Me.Toolkit.Maui.Hosting) | [`Xamarinme.Hosting`](https://www.nuget.org/packages/Xamarinme.Hosting) 1.0.3 | **Published** 26.9.9 |
 | [`Me.Toolkit.Maui.WebHostPatch`](https://www.nuget.org/packages/Me.Toolkit.Maui.WebHostPatch) | [`Xamarinme.WebHostPatch`](https://www.nuget.org/packages/Xamarinme.WebHostPatch) 1.0.0 | **Published** 26.9.9 — no patch needed on .NET 10 |
+| `Me.Toolkit.Maui.Sizing` | nothing — new, not a port | **Not published yet** — relative sizes (`{me:Relative 30}`), built, tested and run in the demo |
 
 The repository was called Mauime. It is not, because nuget.org rejects any package ID beginning with
 `Maui` as reserved — see [Publishing](Publishing) for what that took to establish.
 
-All four multi-target `net10.0`, `net10.0-android`, `net10.0-ios`, `net10.0-maccatalyst` and
+All five multi-target `net10.0`, `net10.0-android`, `net10.0-ios`, `net10.0-maccatalyst` and
 `net10.0-windows10.0.19041.0`.
 
 This is a **port, not a framework bump**. Xamarin.Forms became MAUI, `MSBuild.Sdk.Extras` with

@@ -612,6 +612,39 @@ to become downloadable. In between, the version is taken but absent everywhere p
 that succeeded looks exactly like one that failed. Fifteen minutes of polling was read as evidence
 of failure; it was evidence of nothing.
 
+## Phase 10 — Me.Toolkit.Maui.Sizing
+
+The first library that is not a port. MAUI sizes are absolute; this adds relative ones —
+`WidthRequest="{me:Relative 30}"` is 30% of the parent — against the parent, the window, the
+display, a named element or an ancestor type, with `Min`/`Max` clamping, recomputed as the reference
+changes. It is a markup extension rather than the converter first proposed, because a converter
+never learns which element it is sizing. See [Design Notes](Design-Notes) for the shape.
+
+It takes `Microsoft.Maui.Controls`, the only library to, and no other package.
+
+**Behaviourally tested on the net10.0 slice**, which Nfc could not be: Controls' elements, windows,
+bindings and XAML loader all run there. The first run failed every test in which a size changed
+after binding — a binding delivers updates through a dispatcher, and a test process has none — so
+the tests install an inline one, as MAUI's own do. Four mutations — ignoring padding, keeping the
+display subscription, not watching ancestors, ignoring `Window` — each turned tests red.
+
+**Running the demo on Windows found what the tests could not**, since the net10.0 slice has no
+idiom. The obvious `{me:Relative {OnIdiom ...}}` crashed at startup: MAUI's XAML source generator
+passes a positional markup-extension argument no target property, so `OnIdiom` cannot tell it is
+producing a `double`. Named, `Percent={OnIdiom ...}`, it works. The other nesting,
+`{OnIdiom Desktop={me:Relative 30}}`, cannot work at all — the element is hidden behind an internal
+interface and the result is applied with `SetValue` — so it now throws a message giving the spelling
+that does. The crash was diagnosed by logging the unhandled exception to a file, the same technique
+as Phase 6.
+
+Verified on the running app, by reading each element's laid-out width back into a label: the 30%
+bar followed the window from 197 to 397 to 81; the `OnIdiom` bar stayed at exactly 4/3 of it at
+every size; the window-relative font held at its `Max` of 40 and its `Min` of 12; and 15% of the
+display's shorter side read 216, which is 15% of 1440 — a 4K monitor at 150% — so the
+pixel-to-device-independent conversion is right. iOS and Android are compile-verified only.
+
+Not published: no tag packs it yet.
+
 ## Settled, and not to be reopened
 
 - **`26.9.8` is the version.** Date-based, matching Blazorme and Utilme. Publishing it closes the

@@ -46,7 +46,7 @@ jobs:
       - name: Build libraries
         shell: pwsh
         run: |
-          foreach ($project in 'Me.Toolkit.Maui.Configuration','Me.Toolkit.Maui.Hosting','Me.Toolkit.Maui.Nfc','Me.Toolkit.Maui.WebHostPatch') {
+          foreach ($project in 'Me.Toolkit.Maui.Configuration','Me.Toolkit.Maui.Hosting','Me.Toolkit.Maui.Nfc','Me.Toolkit.Maui.Sizing','Me.Toolkit.Maui.WebHostPatch') {
             dotnet build "$project/$project.csproj" --configuration Release -warnaserror
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }

@@ -14,7 +14,7 @@ using Syncfusion.Maui.Toolkit.Hosting;
 namespace DemoApp;
 
 /// <summary>
-/// Wires up all four Me.Toolkit.Maui libraries. This file is the point of the demo: everything each package
+/// Wires up the Me.Toolkit.Maui libraries. This file is the point of the demo: everything each package
 /// asks of an app is here, in one place, and it is short.
 /// </summary>
 public static class MauiProgram
@@ -63,6 +63,8 @@ public static class MauiProgram
 
         // Me.Toolkit.Maui.Nfc - registers INfc, and wires Android's OnNewIntent so MainActivity needs no edit.
         builder.UseMeToolkitMauiNfc();
+
+        // Me.Toolkit.Maui.Sizing needs nothing here: {me:Relative} is used straight from MainPage.xaml.
 
         // Me.Toolkit.Maui.WebHostPatch - registers the server but does not start it. Starting a listening
         // socket the moment an app launches is rarely what anyone wants.

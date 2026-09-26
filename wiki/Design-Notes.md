@@ -228,6 +228,50 @@ used to throw on a dispatch queue where nothing could observe it and left caller
 fails if it ever closes. Closing it needs a device-test harness, which was deliberately not taken
 on.
 
+### `Me.Toolkit.Maui.Sizing`, new rather than ported
+
+MAUI sizes are absolute numbers, and `OnIdiom`/`OnPlatform` only choose a different absolute number
+per device. This adds a relative one — a percentage of the parent (less its padding), the window,
+the main display, a named element or the nearest ancestor of a type — recomputed as the reference
+changes, the way CSS `%`, `vw` and `vh` behave.
+
+**A markup extension, not a converter.** A converter only runs when a binding source changes, never
+learns which element it is sizing, and takes its options as one unchecked string. `{me:Relative}`
+gets the element and property from `IProvideValueTarget`, builds a per-element tracker, and returns
+a binding to it, so every update after that is ordinary binding machinery.
+
+**It is the one library on `Microsoft.Maui.Controls`**, not `Core`: markup extensions, bindings,
+`VisualElement` and `Window` all live there. That is a consequence of what it does, not a change to
+the shape of the others.
+
+**`TypedBinding`, not `Binding("Value")`.** A string path is resolved by reflection over an internal
+type, which the trimmer cannot see, and iOS and Android Release builds trim. When the reference has
+no size yet the getter reports failure, which leaves the property at its own default — `-1` for
+`WidthRequest`, the platform's size for `FontSize` — rather than a value the library invented.
+
+**The display is behind a seam**, `IDisplaySize`, because `DeviceDisplay.SetCurrent` is internal and
+the net10.0 slice's `DeviceDisplay.Current` throws. It is the only reference a test cannot drive
+directly. `DeviceDisplay`'s change event is static, so an element subscribes only while it is in a
+window; a test asserts the subscription is dropped when it leaves.
+
+**Nesting with `OnIdiom` works one way, and only with a named argument** — found by running the
+demo, since the net10.0 slice has no idiom:
+
+- `{me:Relative Percent={OnIdiom ...}}` works.
+- `{me:Relative {OnIdiom ...}}` does not. For the positional argument MAUI's XAML source
+  generator passes `OnIdiom` a null target property, and `OnIdiom` throws *"Cannot determine
+  property to provide the value for"*. A named argument is passed its `PropertyInfo`.
+- `{OnIdiom Desktop={me:Relative 30}}` cannot work. The target is then the `OnIdiom` extension; the
+  element is only in `IProvideParentValues`, which is internal; and the generated code applies
+  `OnIdiom`'s result with `SetValue`, which cannot carry a binding. It throws a message giving the
+  working spelling.
+
+**Unlike `Me.Toolkit.Maui.Nfc`, it has real behavioural coverage.** Elements, windows, bindings and
+the runtime XAML loader all run on the net10.0 slice of Controls, so the tests arrange real
+elements with `IView.Arrange`, resize real windows with `IWindow.FrameChanged`, and load real XAML.
+The one piece of test scaffolding is an inline dispatcher: a binding delivers source changes
+through its target's dispatcher, and a bare test process has none.
+
 ## Deletions that are not ports
 
 - **`Microsoft.Extensions.FileProviders.Xamarin`** — an empty `Class1`, referenced by nothing, not

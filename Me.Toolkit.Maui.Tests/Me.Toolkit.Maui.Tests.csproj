@@ -23,6 +23,7 @@
     <ProjectReference Include="..\Me.Toolkit.Maui.Configuration\Me.Toolkit.Maui.Configuration.csproj" />
     <ProjectReference Include="..\Me.Toolkit.Maui.Hosting\Me.Toolkit.Maui.Hosting.csproj" />
     <ProjectReference Include="..\Me.Toolkit.Maui.Nfc\Me.Toolkit.Maui.Nfc.csproj" />
+    <ProjectReference Include="..\Me.Toolkit.Maui.Sizing\Me.Toolkit.Maui.Sizing.csproj" />
     <ProjectReference Include="..\Me.Toolkit.Maui.WebHostPatch\Me.Toolkit.Maui.WebHostPatch.csproj" />
   </ItemGroup>
 

@@ -51,6 +51,38 @@ assembly Me.Toolkit.Maui.Nfc
     property Me.Toolkit.Maui.Nfc.NdefMessage NdefMessage { get; }
     property System.String TagId { get; }
 
+assembly Me.Toolkit.Maui.Sizing
+  type Me.Toolkit.Maui.Sizing.RelativeExtension : sealed class
+    ctor .ctor()
+    method Microsoft.Maui.Controls.BindingBase ProvideValue(System.IServiceProvider serviceProvider)
+    property Me.Toolkit.Maui.Sizing.SizeAxis Axis { get; set; }
+    property Me.Toolkit.Maui.Sizing.SizeReference To { get; set; }
+    property Microsoft.Maui.Controls.VisualElement Source { get; set; }
+    property System.Double Max { get; set; }
+    property System.Double Min { get; set; }
+    property System.Double Percent { get; set; }
+    property System.Type AncestorType { get; set; }
+  type Me.Toolkit.Maui.Sizing.RelativeSize : sealed class
+    ctor .ctor(System.Double percent)
+    property Me.Toolkit.Maui.Sizing.SizeAxis Axis { get; set; }
+    property Me.Toolkit.Maui.Sizing.SizeReference To { get; set; }
+    property Microsoft.Maui.Controls.VisualElement Source { get; set; }
+    property System.Double Max { get; set; }
+    property System.Double Min { get; set; }
+    property System.Double Percent { get; set; }
+    property System.Type AncestorType { get; set; }
+  type Me.Toolkit.Maui.Sizing.RelativeSizeExtensions : static class
+    method static T SetRelativeSize<T>(T element, Microsoft.Maui.Controls.BindableProperty property, Me.Toolkit.Maui.Sizing.RelativeSize size)
+  type Me.Toolkit.Maui.Sizing.SizeAxis : enum System.Int32
+    Width = 0
+    Height = 1
+    Shorter = 2
+    Longer = 3
+  type Me.Toolkit.Maui.Sizing.SizeReference : enum System.Int32
+    Parent = 0
+    Window = 1
+    Display = 2
+
 assembly Me.Toolkit.Maui.WebHostPatch
   type Me.Toolkit.Maui.WebHostPatch.IMeToolkitMauiWebHost : interface
     method System.Threading.Tasks.Task StopAsync(System.Threading.CancellationToken cancellationToken = null)

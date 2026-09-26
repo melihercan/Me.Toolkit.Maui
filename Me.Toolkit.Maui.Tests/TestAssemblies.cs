@@ -19,6 +19,7 @@ internal static class TestAssemblies
         "Me.Toolkit.Maui.Configuration",
         "Me.Toolkit.Maui.Hosting",
         "Me.Toolkit.Maui.Nfc",
+        "Me.Toolkit.Maui.Sizing",
         "Me.Toolkit.Maui.WebHostPatch",
     ];
 

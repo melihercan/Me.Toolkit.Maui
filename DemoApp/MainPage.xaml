@@ -6,6 +6,7 @@
     xmlns:buttons="clr-namespace:Syncfusion.Maui.Toolkit.Buttons;assembly=Syncfusion.Maui.Toolkit"
     xmlns:chips="clr-namespace:Syncfusion.Maui.Toolkit.Chips;assembly=Syncfusion.Maui.Toolkit"
     xmlns:tabView="clr-namespace:Syncfusion.Maui.Toolkit.TabView;assembly=Syncfusion.Maui.Toolkit"
+    xmlns:me="https://github.com/melihercan/Me.Toolkit.Maui"
     xmlns:vm="clr-namespace:DemoApp.ViewModels"
     x:DataType="vm:MainViewModel"
     Shell.NavBarIsVisible="False">
@@ -87,7 +88,7 @@
                         TextColor="White" />
                     <Label
                         FontSize="12"
-                        Text="Four libraries for .NET MAUI"
+                        Text="Five libraries for .NET MAUI"
                         TextColor="#D6CCFF" />
                 </VerticalStackLayout>
             </HorizontalStackLayout>
@@ -236,6 +237,92 @@
                                             FontAttributes="Bold"
                                             FontSize="17"
                                             Text="{Binding Address}" />
+                                    </VerticalStackLayout>
+                                </Border>
+
+                            </VerticalStackLayout>
+                        </ScrollView>
+                    </tabView:SfTabItem.Content>
+                </tabView:SfTabItem>
+
+                <!--
+                    Me.Toolkit.Maui.Sizing. Resize the window or rotate the device: nothing on this tab
+                    has a fixed size. Each "measured" label reads the element's actual laid-out width
+                    back, so what is claimed is also what is shown.
+                -->
+                <tabView:SfTabItem Header="Sizing">
+                    <tabView:SfTabItem.Content>
+                        <ScrollView>
+                            <VerticalStackLayout Padding="16,14" Spacing="12">
+
+                                <Label
+                                    Style="{StaticResource Blurb}"
+                                    Text="Resize the window or rotate the device. Every size below is a percentage of something, recomputed as it changes." />
+
+                                <Border Style="{StaticResource Card}">
+                                    <VerticalStackLayout Spacing="6">
+                                        <Label Style="{StaticResource Caption}" Text="30% OF THE PARENT" />
+                                        <BoxView
+                                            x:Name="ParentBox"
+                                            HeightRequest="20"
+                                            HorizontalOptions="Start"
+                                            Color="#512BD4"
+                                            WidthRequest="{me:Relative 30}" />
+                                        <Label
+                                            x:DataType="BoxView"
+                                            BindingContext="{x:Reference ParentBox}"
+                                            Style="{StaticResource Value}"
+                                            Text="{Binding Width, StringFormat='measured {0:F0}'}" />
+                                    </VerticalStackLayout>
+                                </Border>
+
+                                <Border Style="{StaticResource Card}">
+                                    <VerticalStackLayout Spacing="6">
+                                        <Label Style="{StaticResource Caption}" Text="3% OF THE WINDOW WIDTH, CLAMPED 12 TO 40" />
+                                        <Label
+                                            x:Name="WindowText"
+                                            FontSize="{me:Relative 3, To=Window, Min=12, Max=40}"
+                                            Text="Scales with the window" />
+                                        <Label
+                                            x:DataType="Label"
+                                            BindingContext="{x:Reference WindowText}"
+                                            Style="{StaticResource Value}"
+                                            Text="{Binding FontSize, StringFormat='font size {0:F1}'}" />
+                                    </VerticalStackLayout>
+                                </Border>
+
+                                <Border Style="{StaticResource Card}">
+                                    <VerticalStackLayout Spacing="6">
+                                        <Label Style="{StaticResource Caption}" Text="15% OF THE DISPLAY'S SHORTER SIDE, SQUARE" />
+                                        <Image
+                                            x:Name="DisplayImage"
+                                            Aspect="AspectFill"
+                                            HeightRequest="{me:Relative 15, To=Display, Axis=Shorter}"
+                                            HorizontalOptions="Start"
+                                            Source="me.png"
+                                            WidthRequest="{me:Relative 15, To=Display, Axis=Shorter}" />
+                                        <Label
+                                            x:DataType="Image"
+                                            BindingContext="{x:Reference DisplayImage}"
+                                            Style="{StaticResource Value}"
+                                            Text="{Binding Width, StringFormat='measured {0:F0}'}" />
+                                    </VerticalStackLayout>
+                                </Border>
+
+                                <Border Style="{StaticResource Card}">
+                                    <VerticalStackLayout Spacing="6">
+                                        <Label Style="{StaticResource Caption}" Text="ONIDIOM INSIDE: 80% PHONE, 50% TABLET, 40% DESKTOP" />
+                                        <BoxView
+                                            x:Name="IdiomInside"
+                                            HeightRequest="20"
+                                            HorizontalOptions="Start"
+                                            Color="#2B9E6B"
+                                            WidthRequest="{me:Relative Percent={OnIdiom Phone=80, Tablet=50, Desktop=40, Default=40}}" />
+                                        <Label
+                                            x:DataType="BoxView"
+                                            BindingContext="{x:Reference IdiomInside}"
+                                            Style="{StaticResource Value}"
+                                            Text="{Binding Width, StringFormat='measured {0:F0}'}" />
                                     </VerticalStackLayout>
                                 </Border>
 

@@ -131,7 +131,7 @@ the truth. `MultiTargetingTests` asserts the file exists for every slice.
 
 ## The test suite
 
-117 tests in one project, all passing, in Debug and Release.
+170 tests in one project, all passing.
 
 | File | Covers |
 |---|---|
@@ -140,6 +140,7 @@ the truth. `MultiTargetingTests` asserts the file exists for every slice.
 | `ConfigurationTests` | `Me.Toolkit.Maui.Configuration`'s embedded-resource path: key flattening, the environment overlay, missing-file handling, argument validation. |
 | `HostingTests` | That MAUI's own host environment always says `Production`, and that `Me.Toolkit.Maui.Hosting` changes it by wrapping rather than assigning. |
 | `WebHostTests` | `IMeToolkitMauiWebHost`, by starting a real Kestrel on loopback and making real requests to it. |
+| `SizingTests`, `DisplaySizingTests` | `{me:Relative}` and `SetRelativeSize` on real elements, windows and runtime-loaded XAML: every reference, axis and clamp, re-parenting, leaving a window, and the refusals. The display is a stand-in behind `IDisplaySize`; an inline dispatcher stands in for the UI thread. |
 | `PublicApiSurfaceTests` | The whole public surface against `PublicApi.approved.txt`. |
 | `MultiTargetingTests` | That every library is built for every expected framework, that every platform slice exposes the same surface as the `net10.0` one, and that every slice records its reference paths. |
 | `KnownDefectTests` | The Xamarinme defects the port fixed, rewritten from the pins that recorded them. |
@@ -199,6 +200,10 @@ checked by breaking the thing it guards:
 | Layer the configuration overlay before the base file | 1 failure |
 | Ignore the requested environment name | 7 failures |
 | Report the configured port instead of the bound one | 4 failures |
+| Ignore the reference's padding | 3 failures |
+| Never drop the display subscription | 1 failure |
+| Stop watching the ancestors of an `AncestorType` reference | 1 failure |
+| Ignore the element's `Window` changing | 3 failures |
 
 The suite is then run 30 times in a row against the restored tree, with no flakes.
 

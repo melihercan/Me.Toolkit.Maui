@@ -131,6 +131,24 @@ Xamarinme's forks are gone anyway: `InplaceStringBuilder` is fixed upstream in 2
 explicitly, which is what an app wants. Its tests start a real Kestrel on loopback; keep them that
 way.
 
+## Me.Toolkit.Maui.Sizing
+
+New, not a port, and **not published** — no tag in `publish.yml` packs it. Relative sizes:
+`{me:Relative 30}` in XAML, `SetRelativeSize` in code, against the parent (less padding), window,
+display, an `x:Reference` or an `AncestorType`.
+
+- **The only library on `Microsoft.Maui.Controls`**, because markup extensions and bindings live
+  there. The other four stay on `Core`.
+- **A markup extension returning a `TypedBinding`** to a per-element tracker. Not a string-path
+  `Binding` — the trimmer cannot see it.
+- **The display is behind `IDisplaySize`**, because `DeviceDisplay.SetCurrent` is internal. Its
+  event is static, so it is subscribed only while the element is in a window; keep it that way.
+- **`OnIdiom` nests inside, as a named argument only**: `{me:Relative Percent={OnIdiom ...}}`. The
+  positional form crashes in MAUI's source generator, and nesting the other way cannot work; both
+  were found by running the demo, not by tests, because the net10.0 slice has no idiom.
+- **Its tests are behavioural** and need `InlineDispatcher.Install()`: without a dispatcher, every
+  binding update after the first throws.
+
 ## XML documentation is generated and enforced
 
 `GenerateDocumentationFile` is on for the four `Me.Toolkit.Maui.*` libraries, so **CS1591 requires every

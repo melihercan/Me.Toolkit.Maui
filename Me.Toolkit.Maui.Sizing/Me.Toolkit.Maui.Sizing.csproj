@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(MeToolkitMauiTargetFrameworks)</TargetFrameworks>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <AssemblyName>Me.Toolkit.Maui.Sizing</AssemblyName>
+    <RootNamespace>Me.Toolkit.Maui.Sizing</RootNamespace>
+    <PackageId>Me.Toolkit.Maui.Sizing</PackageId>
+    <Product>Me.Toolkit.Maui.Sizing</Product>
+    <Description>Relative sizes for .NET MAUI: a percentage of the parent, the window, the display or another element, in XAML or code.
+WidthRequest="{me:Relative 30}" is 30% of the parent's width, and stays that way as the window is resized or the phone rotated. Works on any double property - WidthRequest, HeightRequest, FontSize, Spacing - with Min and Max to clamp it.</Description>
+    <PackageTags>maui xaml markup-extension responsive relative size percentage viewport</PackageTags>
+    <PackageReleaseNotes>First release.
+{me:Relative} and SetRelativeSize size a double property as a percentage of the parent (less its padding), the window, the main display, an element named with x:Reference, or the nearest ancestor of a type. Width, Height, Shorter and Longer pick the dimension; Min and Max clamp the result. The value is recomputed whenever the reference changes size or the element moves in the tree.</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Microsoft.Maui.Controls, unlike the other libraries' Microsoft.Maui.Core: markup extensions,
+      bindings, VisualElement and Window all live in Controls, and there is no sizing a XAML element
+      without them. Same version as the demo app, and the same line as Core elsewhere.
+    -->
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.101" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Me.Toolkit.Maui.Tests" />
+  </ItemGroup>
+
+</Project>
