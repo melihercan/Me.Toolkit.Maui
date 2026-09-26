@@ -313,6 +313,16 @@ layout units, like CSS media queries on the viewport, and are refused alongside 
 **A `Thickness` target gets the value on the chosen `Sides`** — all by default, the rest 0 — through a
 second typed binding rather than a converter, so it stays trim-safe.
 
+**Sizes are whole units by default.** Seeing a 15.4 font and a 300.444 width on a phone, the owner
+asked what the decimals were for — nothing visible — so `Round` defaults to `Units`; `Pixels` and
+`None` remain for when exactness matters more than a round number.
+
+**On iOS and Mac Catalyst the window is measured from `UIWindow.Bounds`.** MAUI's `Window.Width` on
+Mac Catalyst is in layout units when a window is restored at launch and in Mac points after it is
+resized: a 600-point window read 1010 wide at launch and 779 after a one-point resize. The native
+bounds are always in layout units, so no conversion is guessed at; `Window.Width` remains the
+fallback before the native window exists, and everywhere else.
+
 **`Round` is `None`, `Units` or `Pixels`.** It began as a boolean for whole units, and running it
 showed whole units are not whole pixels: at 150% a requested 469 rendered as 469.333, the platform's
 own snapping. `Pixels` rounds with the window's `DisplayDensity` and listens to its

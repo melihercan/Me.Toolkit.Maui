@@ -134,6 +134,14 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
         }
 
         Update();
+
+        // An element usually joins its window before the platform has worked out the window's
+        // insets; on Android that read them as zero and nothing looked again, since the window
+        // never resized. So look once more shortly after arriving.
+        if (_size.SafeArea && _window is not null)
+        {
+            _element.Dispatcher?.DispatchDelayed(TimeSpan.FromMilliseconds(150), Update);
+        }
     }
 
     private void Detach()
@@ -198,8 +206,7 @@ internal sealed class RelativeSizeTracker : INotifyPropertyChanged
 
     // Window.Width and Height are in the platform's points, which on Mac Catalyst are not layout
     // units; see LayoutUnits. -1 until the platform has sized the window.
-    private static Size? WindowSize(Window window) =>
-        window.Width < 0 || window.Height < 0 ? null : LayoutUnits.ToLayoutUnits(window.Width, window.Height);
+    private static Size? WindowSize(Window window) => LayoutUnits.WindowSize(window);
 
     private Size? ReferenceSize()
     {

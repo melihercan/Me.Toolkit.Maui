@@ -160,7 +160,7 @@ display, an `x:Reference` or an `AncestorType`.
   measured-value labels. Deploy with `-t:Install` and check `files/.__override__` first. iOS is
   unrun.
 - **Window and display sizes go through `LayoutUnits`**: on Mac Catalyst with the iPad idiom (MAUI's
-  default) they are Mac points while layout is in iPad points, 1/0.77 as many. Measuring the root page
+  default) the display is in Mac points while layout is in iPad points, 1/0.77 as many. Measuring the root page
   instead was tried and fails - a `Shell` root reports no size.
 - **`Breakpoints` is a string** (`'600:50 1200:33'`, space-separated) compared against the window's
   width, or the reference's with `BreakpointsBy=Reference`; refused alongside `Portrait`/`Landscape`.
@@ -171,7 +171,12 @@ display, an `x:Reference` or an `AncestorType`.
   `X`/`Y` change. `IDisplaySize.SizeFor(Window)` is the seam.
 - **No Grid column/row support**, deliberately: a `ColumnDefinition` has nothing to measure, and a
   percentage of its grid is star sizing.
-- **`SafeArea` reads platform insets** (`SafeArea.InsetsOf`, a test hook), `To=Window` only.
+- **`SafeArea` reads platform insets** (`SafeArea.InsetsOf`, a test hook), `To=Window` only: Android
+  `WindowMetrics` first (the view's root insets are empty until layout), and a re-check 150 ms after
+  joining a window.
+- **`Round` defaults to `Units`**, at the owner's request: whole numbers unless asked otherwise.
+- **iOS/Mac Catalyst windows are measured from `UIWindow.Bounds`** (`LayoutUnits.WindowSize`): MAUI's
+  `Window.Width` there switches between layout units and Mac points.
 - **`Me.Toolkit.Maui.Sizing.Analyzers`** (netstandard2.0, `Microsoft.CodeAnalysis.CSharp` 4.14.0 -
   added with the owner's go-ahead) reads XAML additional files and reports `MTKS001`-`MTKS005`, all
   warnings. It mirrors `RelativeSize`'s validation - change both together. It is packed into Sizing

@@ -539,10 +539,11 @@ public sealed class DisplaySizingTests : IDisposable
             var window = new Window(new ContentPage { Content = new Grid { label } });
             ((IWindow)window).FrameChanged(new Rect(0, 0, 1024, 768));
 
-            label.SetRelativeSize(Label.FontSizeProperty, new RelativeSize(3) { To = SizeReference.Window });
+            // Round=None: this is about the conversion's arithmetic, which whole units would hide.
+            label.SetRelativeSize(Label.FontSizeProperty, new RelativeSize(3) { To = SizeReference.Window, Round = SizeRounding.None });
             label.FontSize.Should().BeApproximately(1024 / 0.77 * 0.03, 1e-9);
 
-            label.SetRelativeSize(Label.FontSizeProperty, new RelativeSize(15) { To = SizeReference.Display, Axis = SizeAxis.Shorter });
+            label.SetRelativeSize(Label.FontSizeProperty, new RelativeSize(15) { To = SizeReference.Display, Axis = SizeAxis.Shorter, Round = SizeRounding.None });
             label.FontSize.Should().BeApproximately(1080 / 0.77 * 0.15, 1e-9, "the demo read 162 before the fix");
         }
         finally

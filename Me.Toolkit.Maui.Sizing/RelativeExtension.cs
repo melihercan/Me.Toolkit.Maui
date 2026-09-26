@@ -51,7 +51,7 @@ public sealed class RelativeExtension : IMarkupExtension<BindingBase>
     public string? Breakpoints { get; set; }
 
     /// <summary>How the result is rounded: <c>Units</c> or <c>Pixels</c>. See <see cref="RelativeSize.Round"/>.</summary>
-    public SizeRounding Round { get; set; }
+    public SizeRounding Round { get; set; } = SizeRounding.Units;
 
     /// <summary>Which sides of a margin or padding get the value. See <see cref="RelativeSize.Sides"/>.</summary>
     public ThicknessSides Sides { get; set; } = ThicknessSides.All;

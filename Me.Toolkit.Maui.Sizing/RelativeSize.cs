@@ -101,13 +101,13 @@ public sealed class RelativeSize
 
     /// <summary>
     /// How the result is rounded, before <see cref="Min"/> and <see cref="Max"/> so it never escapes
-    /// them. Defaults to <see cref="SizeRounding.None"/>.
+    /// them. Defaults to <see cref="SizeRounding.Units"/>: sizes are whole numbers unless asked otherwise.
     /// </summary>
     /// <remarks>
     /// Rounding a value close to 100% of its parent can round up past the space available, by up to
     /// half a unit or pixel, which layout then trims.
     /// </remarks>
-    public SizeRounding Round { get; init; }
+    public SizeRounding Round { get; init; } = SizeRounding.Units;
 
     /// <summary>
     /// Which sides of a <see cref="Thickness"/> property — <c>Margin</c>, <c>Padding</c> — get the
@@ -259,7 +259,7 @@ public sealed class RelativeSize
             return new RelativeSize(percent ?? 0)
             {
                 Breakpoints = breakpoints,
-                Round = round ?? SizeRounding.None,
+                Round = round ?? SizeRounding.Units,
                 Sides = sides ?? ThicknessSides.All,
                 BreakpointsBy = breakpointsBy ?? BreakpointSource.Window,
                 SafeArea = safeArea ?? false,

@@ -777,6 +777,29 @@ taught: MAUI's XAML compiler already errors on an unknown option name, so the an
 keep on what compiles and then fails at runtime; and diagnostic messages are format strings, so
 the braces in `{me:Relative}` have to be doubled — a test formats every message for that reason.
 
+## Phase 13 — the platform run
+
+Every feature on every platform: an Android 16 phone and an iPhone XR in both orientations, Mac
+Catalyst in a restored and a resized window, Windows across two monitors. It found three things the
+tests and Windows could not:
+
+- **`SafeArea` read zero on Android.** An element joins its window before Android has computed the
+  insets, and the window never resized to prompt a second look. It now reads `WindowMetrics` on
+  Android 11 and later, which know the insets at any time, and looks again 150 ms after joining a
+  window. Then: portrait height 83 against a safe 75, landscape width 83 against a safe 75 — the
+  bars moving from top and bottom to the sides as the phone turned.
+- **Mac Catalyst's `Window.Width` changes units.** Restored at launch it is in layout units, after a
+  resize in Mac points, so a fixed conversion was wrong one way or the other: window-relative sizes
+  read 30% large until the first resize. The window is now measured from `UIWindow.Bounds` on iOS and
+  Mac Catalyst; correct at launch (779 for a 600-point window) and after a visible resize to 1300 ×
+  700 (1688).
+- **Decimals nobody wanted.** A 15.4 font and a 300.444 width prompted the owner to ask what they
+  were for. Whole units are now the default.
+
+On the iPhone, the notch: 10% of the landscape width read 90, and 80 with `SafeArea` — 896 less 48
+on each side. Values were read off the phone through a mirror, since iOS will not screenshot
+remotely without a root-owned tunnel.
+
 ## Settled, and not to be reopened
 
 - **`26.9.8` is the version.** Date-based, matching Blazorme and Utilme. Publishing it closes the
@@ -803,6 +826,6 @@ itself from `wiki/`; the demo has run on Mac Catalyst and an iPhone.
 - **`Me.Toolkit.Maui.Nfc`.** Unfinished, unpublished, and never exercised against a physical tag. The
   Android foreground-dispatch path and the CoreNFC session have no behavioural coverage; the demo's
   NFC tab renders but has not been used to read anything.
-- **iOS and Mac Catalyst beyond the demo.** The demo has now run on both, but only Configuration,
-  Hosting and Sizing were exercised there; `Me.Toolkit.Maui.WebHostPatch` has not served a request on
+- **iOS and Mac Catalyst beyond the demo.** The demo has now run on both, and Sizing is verified
+  there feature by feature; but only Configuration, Hosting and Sizing were exercised; `Me.Toolkit.Maui.WebHostPatch` has not served a request on
   either, and its note that iOS stops a backgrounded server is inherited from the Xamarin era.

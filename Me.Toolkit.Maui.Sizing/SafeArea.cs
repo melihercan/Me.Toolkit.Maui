@@ -33,6 +33,19 @@ internal static class SafeArea
             return new Thickness(insets.Left / scale, insets.Top / scale, insets.Right / scale, insets.Bottom / scale);
         }
 #elif ANDROID
+        // Android 11 and later: the window's metrics, which know the insets at any time. The view's
+        // root insets, below, only exist once the view has been laid out - and an element typically
+        // joins its window before that, which on a phone read the insets as zero.
+        if (OperatingSystem.IsAndroidVersionAtLeast(30)
+            && window.Handler?.PlatformView is Android.App.Activity { WindowManager.CurrentWindowMetrics.WindowInsets: { } metrics }
+            && window.DisplayDensity > 0)
+        {
+            var bars = metrics.GetInsets(Android.Views.WindowInsets.Type.SystemBars() | Android.Views.WindowInsets.Type.DisplayCutout());
+            var scale = window.DisplayDensity;
+
+            return new Thickness(bars.Left / scale, bars.Top / scale, bars.Right / scale, bars.Bottom / scale);
+        }
+
         if (window.Handler?.PlatformView is Android.App.Activity { Window.DecorView: { } decor }
             && AndroidX.Core.View.ViewCompat.GetRootWindowInsets(decor) is { } windowInsets
             && window.DisplayDensity > 0)

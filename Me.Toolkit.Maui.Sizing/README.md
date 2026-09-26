@@ -42,7 +42,7 @@ No registration is needed. It works on any `double` property — `WidthRequest`,
 | `Axis` | `Width`, `Height`, `Shorter`, `Longer` | `Width` |
 | `Min`, `Max` | clamp the result | 0, no limit |
 | `BreakpointsBy` | `Window`, or `Reference` for a container query | `Window` |
-| `Round` | `None`, `Units` or `Pixels`, before the clamp | `None` |
+| `Round` | `Units`, `Pixels` or `None`, before the clamp | `Units` |
 | `Sides` | which sides of a margin or padding | `All` |
 | `SafeArea` | with `To=Window`, leave out the notch and system bars | `False` |
 | `Source` | an element, usually `{x:Reference}` | — |
@@ -118,11 +118,14 @@ so the size is recomputed once more shortly after the window resizes.
 
 ## Rounding
 
-Rounding happens before `Min`/`Max`, so it never escapes them.
+**Sizes are whole numbers by default** — a 15.4 font is 15, a 300.444 width is 300 — because a
+fraction of a unit is below anything anyone can see, and only makes values harder to read. Rounding
+happens before `Min`/`Max`, so it never escapes them.
 
-- **`Round=Units`** rounds to whole device-independent units: tidy values, and sizes that step
-  rather than creep during a resize. Not whole pixels on a display scaled by a fraction — at 150%
-  an odd value lands between two, and the platform moves it: 469 rendered as 469.333 on Windows.
+- **`Round=Units`**, the default, rounds to the nearest whole device-independent unit, halves up.
+  Not whole *pixels* on a display scaled by a fraction — at 150% an odd value lands between two, and
+  the platform nudges it by less than half a pixel: 469 rendered as 469.333 on Windows.
+- **`Round=None`** leaves the value as calculated.
 - **`Round=Pixels`** rounds to whole physical pixels of the element's window, so what is requested
   is what is drawn: requested 591.3333, rendered 591.3333 — 887 pixels at 150%. It uses the density
   of the monitor the window is on and re-rounds when the window moves to one scaled differently.
@@ -206,10 +209,12 @@ Two other spellings look reasonable and do not work, both because of how MAUI co
   2160-pixel portrait one beside it. Elsewhere it is the main display: a phone has one, and Mac
   Catalyst offers no per-window screen to ask.
 
-Both are converted to the units pages are laid out in. That matters on **Mac Catalyst**, where an
-app with the iPad idiom — MAUI's template default — is shown scaled to 77%: the window and display
-are reported in Mac points while layout uses iPad points, 1.3 times as many. Without the conversion
-every window- and display-relative size came out 23% small on a Mac.
+Both are measured in the units pages are laid out in. That matters on **Mac Catalyst**, where an
+app with the iPad idiom — MAUI's template default — is shown scaled to 77%: layout uses iPad points,
+1.3 times as many as the Mac points the display is reported in, and MAUI's own `Window.Width` is
+reported in one or the other depending on whether the window was just restored or has been resized.
+So on iOS and Mac Catalyst the window is measured from the native window's bounds, which are always
+in layout units, and the display is converted with Apple's 0.77.
 
 Until the reference has a size — before the first layout, or before the element is in a window —
 the property keeps its default. If the element moves to another parent or window, it follows.
@@ -255,8 +260,9 @@ own XAML compiler.
 
 Windows, resized and dragged between two monitors; an Android 16 phone, rotated; Mac Catalyst on
 macOS 15, resized; an iPhone XR on iOS 18, rotated — every card of the repository's demo checked
-against its expected value. `Breakpoints`, `Round`, `Sides`, `SafeArea` and relative margins have
-so far run on Windows only.
+against its expected value, in both orientations, including `Breakpoints`, rounding, `SafeArea` —
+against the Android status and navigation bars and the iPhone's notch and home indicator — and a
+relative, rounded margin.
 
 ## Documentation
 

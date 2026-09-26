@@ -253,6 +253,20 @@ public class RelativeSizingTests
     }
 
     [Fact]
+    public void Sizes_are_whole_units_unless_asked_otherwise()
+    {
+        // The default, because a size of 300.444 is noise to whoever reads it; Pixels and None are
+        // there when exactness matters more than a round number.
+        var child = ChildOf(100, 100);
+
+        child.SetRelativeSize(VisualElement.WidthRequestProperty, new RelativeSize(33.3));
+
+        child.WidthRequest.Should().Be(33);
+        new RelativeSize(1).Round.Should().Be(SizeRounding.Units);
+        RelativeSize.Parse("1").Round.Should().Be(SizeRounding.Units);
+    }
+
+    [Fact]
     public void Rounding_happens_before_the_clamp_so_it_never_escapes_it()
     {
         var child = ChildOf(100, 100);
@@ -493,7 +507,7 @@ public class RelativeSizingTests
 
             var box = grid.FindByName<BoxView>("Box");
             box.WidthRequest.Should().BeApproximately(704 / 1.5, 1e-9, "35% of the 1340-wide parent, though the window is only 400");
-            box.Margin.Should().Be(new Thickness(26.8, 0, 26.8, 0));
+            box.Margin.Should().Be(new Thickness(27, 0, 27, 0), "2% of 1340 is 26.8, rounded to whole units by default");
         });
     }
 

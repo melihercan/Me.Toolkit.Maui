@@ -30,6 +30,30 @@ internal static class LayoutUnits
         new(width / PointsPerUnit, height / PointsPerUnit);
 
     /// <summary>
+    /// A window's size in layout units, or <see langword="null"/> before the platform has sized it.
+    /// </summary>
+    /// <remarks>
+    /// On iOS and Mac Catalyst the native window's bounds, which UIKit reports in exactly the units
+    /// pages are laid out in. Not <see cref="Window.Width"/>: on Mac Catalyst MAUI reports that in
+    /// layout units when a window is restored at launch and in Mac points after it is resized, so no
+    /// fixed conversion is right for both - a 600-point window read 1010 wide at launch and 779 after
+    /// a resize. Everywhere else, and before the native window exists, <see cref="Window.Width"/>.
+    /// </remarks>
+    internal static Size? WindowSize(Window window)
+    {
+#if IOS || MACCATALYST
+        if (window.Handler?.PlatformView is UIKit.UIWindow platform
+            && platform.Bounds.Width > 0
+            && platform.Bounds.Height > 0)
+        {
+            return new Size(platform.Bounds.Width, platform.Bounds.Height);
+        }
+#endif
+
+        return window.Width < 0 || window.Height < 0 ? null : ToLayoutUnits(window.Width, window.Height);
+    }
+
+    /// <summary>
     /// A window's display density: physical pixels per point. Settable so tests can supply one;
     /// <see cref="Window.DisplayDensity"/> asks the platform, and is 1 without it.
     /// </summary>

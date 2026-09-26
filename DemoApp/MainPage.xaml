@@ -283,6 +283,30 @@
                                     </VerticalStackLayout>
                                 </Border>
 
+                                <!-- SafeArea leaves out the notch, cutout and system bars. The pairs differ
+                                     by exactly the insets on a phone, and not at all on a desktop. -->
+                                <Border Style="{StaticResource Card}">
+                                    <VerticalStackLayout Spacing="6">
+                                        <Label Style="{StaticResource Caption}" Text="10% OF THE WINDOW, WITHOUT AND WITH SAFEAREA" />
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="4">
+                                            <Label Style="{StaticResource Value}" Text="width" />
+                                            <BoxView x:Name="WholeWidth" Grid.Column="1" HeightRequest="12" HorizontalOptions="Start" Color="#6C6C7A" WidthRequest="{me:Relative 10, To=Window}" />
+                                            <Label Grid.Row="1" Style="{StaticResource Value}" Text="safe width" />
+                                            <BoxView x:Name="SafeWidth" Grid.Row="1" Grid.Column="1" HeightRequest="12" HorizontalOptions="Start" Color="#2B9E6B" WidthRequest="{me:Relative 10, To=Window, SafeArea=True}" />
+                                            <Label Grid.Row="2" Style="{StaticResource Value}" Text="height" />
+                                            <BoxView x:Name="WholeHeight" Grid.Row="2" Grid.Column="1" HeightRequest="12" HorizontalOptions="Start" Color="#6C6C7A" WidthRequest="{me:Relative 10, To=Window, Axis=Height}" />
+                                            <Label Grid.Row="3" Style="{StaticResource Value}" Text="safe height" />
+                                            <BoxView x:Name="SafeHeight" Grid.Row="3" Grid.Column="1" HeightRequest="12" HorizontalOptions="Start" Color="#2B9E6B" WidthRequest="{me:Relative 10, To=Window, Axis=Height, SafeArea=True}" />
+                                        </Grid>
+                                        <HorizontalStackLayout Spacing="8">
+                                            <Label x:DataType="BoxView" BindingContext="{x:Reference WholeWidth}" Style="{StaticResource Value}" Text="{Binding Width, StringFormat='W {0:F0}'}" />
+                                            <Label x:DataType="BoxView" BindingContext="{x:Reference SafeWidth}" Style="{StaticResource Value}" Text="{Binding Width, StringFormat='safe {0:F0}'}" />
+                                            <Label x:DataType="BoxView" BindingContext="{x:Reference WholeHeight}" Style="{StaticResource Value}" Text="{Binding Width, StringFormat='H {0:F0}'}" />
+                                            <Label x:DataType="BoxView" BindingContext="{x:Reference SafeHeight}" Style="{StaticResource Value}" Text="{Binding Width, StringFormat='safe {0:F0}'}" />
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
+                                </Border>
+
                                 <!-- The display the window is on: on Windows a window dragged to another
                                      monitor measures that monitor, not the main one. -->
                                 <Border Style="{StaticResource Card}">
@@ -313,7 +337,7 @@
                                             x:DataType="Label"
                                             BindingContext="{x:Reference WindowText}"
                                             Style="{StaticResource Value}"
-                                            Text="{Binding FontSize, StringFormat='font size {0:F1}'}" />
+                                            Text="{Binding FontSize, StringFormat='font size {0:F0}'}" />
                                     </VerticalStackLayout>
                                 </Border>
 
@@ -403,7 +427,7 @@
                                 </Border>
 
                                 <!-- Breakpoints choose the percentage by window width, like CSS media
-                                     queries; Round=Pixels lands on whole physical pixels; the padding is a relative
+                                     queries; sizes are whole units by default; the padding is a relative
                                      Thickness, the same on every side. -->
                                 <Border Padding="{me:Relative 1.5, To=Window, Min=8, Max=24, Round=Units}" Style="{StaticResource Card}">
                                     <VerticalStackLayout Spacing="6">
@@ -413,10 +437,10 @@
                                             HeightRequest="20"
                                             HorizontalOptions="Start"
                                             Color="#512BD4"
-                                            WidthRequest="{me:Relative 90, Breakpoints='600:60 1200:35', Round=Pixels}" />
+                                            WidthRequest="{me:Relative 90, Breakpoints='600:60 1200:35'}" />
                                         <HorizontalStackLayout x:DataType="BoxView" BindingContext="{x:Reference Responsive}" Spacing="6">
-                                            <Label Style="{StaticResource Value}" Text="{Binding WidthRequest, StringFormat='requested {0}'}" />
-                                            <Label Style="{StaticResource Value}" Text="{Binding Width, StringFormat='rendered {0}'}" />
+                                            <Label Style="{StaticResource Value}" Text="{Binding WidthRequest, StringFormat='requested {0:F0}'}" />
+                                            <Label Style="{StaticResource Value}" Text="{Binding Width, StringFormat='rendered {0:F0}'}" />
                                         </HorizontalStackLayout>
                                     </VerticalStackLayout>
                                 </Border>
@@ -431,7 +455,7 @@
                                             x:DataType="Label"
                                             BindingContext="{x:Reference Styled}"
                                             Style="{StaticResource Value}"
-                                            Text="{Binding FontSize, StringFormat='font size {0:F1}'}" />
+                                            Text="{Binding FontSize, StringFormat='font size {0:F0}'}" />
                                     </VerticalStackLayout>
                                 </Border>
 
