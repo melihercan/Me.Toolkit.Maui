@@ -11,7 +11,8 @@
     <Description>appsettings.json configuration for .NET MAUI apps, from the app package as a MauiAsset or from an assembly's embedded resources, with the usual appsettings.{environment}.json overlay.
 MAUI references Microsoft.Extensions.Configuration but not the JSON provider, so builder.Configuration has no AddJsonStream. That is what this supplies.</Description>
     <PackageTags>maui configuration appsettings json mauiasset</PackageTags>
-    <PackageReleaseNotes>26.9.9 renames the assemblies and namespaces to match the package ID. 26.9.8 shipped the correct package ID around assemblies still called Mauime.*, so consuming it meant writing using Mauime.X against a package called Me.Toolkit.Maui.X; it is unlisted. Nothing else changed.
+    <PackageReleaseNotes>26.9.27 stamps the net10.0 assembly with the package version. 26.9.14 shipped it as 1.0.0.0 - the publish workflow's test step rebuilt that slice without the version before packing - while the Android, iOS, Mac Catalyst and Windows assemblies were right. Nothing else changed.
+26.9.9 renames the assemblies and namespaces to match the package ID. 26.9.8 shipped the correct package ID around assemblies still called Mauime.*, so consuming it meant writing using Mauime.X against a package called Me.Toolkit.Maui.X; it is unlisted. Nothing else changed.
 First release. Replaces Xamarinme.Configuration 1.0.2, which was for Xamarin.
 AddAppPackageJson reads a MauiAsset; AddEmbeddedResourceJson reads an embedded resource, which is the path Xamarinme offered and still works. Both layer appsettings.{environment}.json over the base file, and both name the file and where they looked when a required one is missing.
 Parsing is Microsoft.Extensions.Configuration.Json's. Xamarinme vendored a copy of Microsoft's Newtonsoft-era parser and froze it there, with a Newtonsoft.Json dependency attached. Nothing is vendored here.
