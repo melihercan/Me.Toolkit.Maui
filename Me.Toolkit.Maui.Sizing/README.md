@@ -245,6 +245,18 @@ own XAML compiler.
   `Auto` rows, a `VerticalStackLayout` in its stacking direction — makes the child depend on the
   parent and the parent on the child. Size against something with a size of its own: a `*` row,
   the window, or a named element.
+- **Keep relative sizes out of implicit styles for common types.** A `TargetType="Label"` style
+  with no key reaches labels MAUI builds itself, not only yours. On Mac Catalyst a `Shell` builds
+  its flyout into a table even when `FlyoutBehavior` is `Disabled`, and a relative size in a table
+  cell loops: it starts at the default and is set once the label is in a window, the row changes
+  height, the table reloads it with a new label, and so on — the app opened no window and ran at
+  full CPU. Put the size in a keyed style, `Style="{StaticResource Body}"`, on the labels you mean.
+  Found in an app on Mac Catalyst by sampling the process; Windows and Android did not show it.
+- **Inside a `CollectionView` item, size against the window, not the parent.** On Windows the root
+  of an item template never gets a `Width` — it stays -1 while its children are laid out — so
+  `To=Parent`, and `Source` or `AncestorType` resolving to that root, never has a size and the
+  property keeps its default. `To=Window` works there: `MaximumWidthRequest="{me:Relative 65,
+  To=Window, Min=320, Max=640}"` on a chat bubble followed the window as it was resized.
 - **No leaks through the display.** The display's change event is static; an element subscribes
   only while it is in a window and unsubscribes when it leaves.
 - **Trim-safe.** The binding is a `TypedBinding`, not a string path, so iOS and Android Release
